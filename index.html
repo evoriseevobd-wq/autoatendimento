@@ -159,12 +159,13 @@
     }
     .category-title-text { flex: 1; }
     .category-arrow {
-      font-size: 11px;
+      font-size: 18px;
       color: var(--muted);
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
       flex-shrink: 0;
+      line-height: 1;
+      transition: color 0.2s ease;
     }
-    .category-section.open .category-arrow { transform: rotate(90deg); }
+    .category-section.open .category-arrow { color: var(--ink); }
     .items-grid {
       display: flex;
       flex-direction: column;
@@ -348,7 +349,6 @@
       inset: 0;
       z-index: 450;
       pointer-events: auto;
-      background: rgba(10, 9, 8, 0.82);
       transition: opacity 0.4s ease;
     }
     .spotlight-overlay.hidden {
@@ -360,7 +360,7 @@
     .spotlight-hole {
       position: absolute;
       border-radius: 14px;
-      box-shadow: 0 0 0 9999px rgba(10, 9, 8, 0.82);
+      box-shadow: 0 0 0 9999px rgba(10, 9, 8, 0.55);
       transition: all 0.3s ease;
       pointer-events: none;
     }
@@ -643,6 +643,8 @@
     function dismissSpotlight() {
       document.getElementById('spotlight-overlay').classList.add('hidden');
       document.getElementById('spotlight-label').classList.add('hidden');
+      // Toast aparece logo depois que o spotlight fecha
+      setTimeout(() => showToast(), 300);
     }
 
     function showToast() {
@@ -737,6 +739,9 @@
         catNav.appendChild(btn);
       });
 
+      // Esconde a nav de categorias
+      document.getElementById('cat-nav-wrap').style.display = 'none';
+
       const content = document.getElementById('cardapio-content');
       content.innerHTML = '';
 
@@ -750,12 +755,13 @@
         title.className = 'category-title';
         title.innerHTML = `
           <span class="category-title-text">${cat}</span>
-          <span class="category-arrow">▶</span>
+          <span class="category-arrow">›</span>
         `;
 
         title.addEventListener('click', () => {
-          dismissSpotlight(); // fecha spotlight se ainda aberto
-          section.classList.toggle('open');
+          dismissSpotlight();
+          const isOpen = section.classList.toggle('open');
+          title.querySelector('.category-arrow').textContent = isOpen ? '⌄' : '›';
         });
 
         const grid = document.createElement('div');
@@ -814,7 +820,6 @@
       cart[itemId] = { item, qty: 1 };
       refreshItemCard(itemId);
       updateCartUI();
-      showToast(); // passo 2
     }
 
     function changeQty(itemId, delta, e) {
