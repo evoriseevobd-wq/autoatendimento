@@ -781,9 +781,9 @@
       const inCart = cart[item.id];
 
       card.innerHTML = `
-        ${item.foto_url
-          ? `<div class="item-img-wrap"><img class="item-img" src="${item.foto_url}" alt="${escHtml(item.nome)}" loading="lazy"/></div>`
-          : `<div class="item-img-placeholder">🍽️</div>`}
+       ${getPrimeiraFoto(item)
+  ? `<div class="item-img-wrap"><img class="item-img" src="${getPrimeiraFoto(item)}" alt="${escHtml(item.nome)}" loading="lazy"/></div>`
+  : `<div class="item-img-placeholder">🍽️</div>`}
         <div class="item-info">
           <div class="item-name">${escHtml(item.nome)}</div>
           ${item.descricao ? `<div class="item-desc">${escHtml(item.descricao)}</div>` : ''}
@@ -981,6 +981,16 @@
       return String(str||'').toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'');
     }
 
+    function getPrimeiraFoto(item) {
+  if (!item || !item.foto_url) return null;
+  try {
+    const parsed = JSON.parse(item.foto_url);
+    if (Array.isArray(parsed)) return parsed[0] || null;
+    return item.foto_url;
+  } catch {
+    return item.foto_url;
+  }
+}
     init();
   </script>
 </body>
