@@ -777,6 +777,7 @@
     function buildItemCard(item) {
       const card = document.createElement('div');
       card.className = 'item-card' + (!item.ativo ? ' inactive' : '');
+card.addEventListener('click', () => openItemDetailModal(item));
       card.id = `item-card-${item.id}`;
       const inCart = cart[item.id];
 
@@ -981,6 +982,141 @@
       return String(str||'').toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'');
     }
 
+function openItemDetailModal(item) {
+  const existing = document.getElementById("item-detail-modal");
+  if (existing) existing.remove();
+
+  const fotos = getFotos(item);
+  const temFotos = fotos.length > 0;
+
+  const modal = document.createElement("div");
+  modal.id = "item-detail-modal";
+  modal.style.cssText = `
+    position:fixed; inset:0; background:rgba(26,24,20,0.6);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:800; backdrop-filter:blur(4px);
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background:var(--white); border-radius:24px 24px 0 0;
+      width:100%; max-width:700px; max-height:90vh;
+      overflow-y:auto; padding-bottom:40px;
+      animation:slideUp 0.3s ease;
+    ">
+      ${temFotos ? `
+      <div style="position:relative; overflow:hidden; border-radius:24px 24px 0 0;">
+        <div id="carrossel-track" style="display:flex; transition:transform 0.3s ease;">
+          ${fotos.map(url => `
+            <img src="${url}" style="min-width:100%; height:260px; object-fit:cover; flex-shrink:0;" />
+          `).join('')}
+        </div>
+        ${fotos.length > 1 ? `
+        <button onclick="carrosselAnterior()" style="
+          position:absolute; left:12px; top:50%; transform:translateY(-50%);
+          width:36px; height:36px; border-radius:50%; border:none;
+          background:rgba(0,0,0,0.5); color:white; font-size:20px;
+          cursor:pointer; display:flex; align-items:center; justify-content:center;
+        ">‹</button>
+        <button onclick="carrosselProximo(${fotos.length})" style="
+          position:absolute; right:12px; top:50%; transform:translateY(-50%);
+          width:36px; height:36px; border-radius:50%; border:none;
+          background:rgba(0,0,0,0.5); color:white; font-size:20px;
+          cursor:pointer; display:flex; align-items:center; justify-content:center;
+        ">›</button>
+        <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px;">
+          ${fotos.map((_, i) => `
+            <div id="bolinha-${i}" onclick="irParaFoto(${i}, ${fotos.length})" style="
+              width:8px; height:8px; border-radius:50%; cursor:pointer;
+              background:${i === 0 ? 'white' : 'rgba(255,255,255,0.45)'};
+              transition:all 0.2s;
+            "></div>
+          `).join('')}
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+
+      <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:var(--ink);">
+              ${escHtml(item.nome)}
+            </div>
+            <div style="font-size:12px; font-weight:600; color:var(--muted); 
+              background:var(--cream2); padding:3px 12px; border-radius:999px; 
+              display:inline-block; margin-top:6px;">
+              ${escHtml(item.categoria || 'Geral')}
+            </div>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--ink); flex-shrink:0;">
+            ${formatCurrency(item.preco)}
+          </div>
+        </div>
+
+        ${item.descricao ? `
+        <p style="font-size:14px; color:var(--ink2); line-height:1.65; font-weight:300;">
+          ${escHtml(item.descricao)}
+        </p>
+        ` : ''}
+
+        <div style="display:flex; gap:10px; margin-top:4px;">
+          <button onclick="document.getElementById('item-detail-modal').remove()" style="
+            flex:1; padding:14px; border-radius:var(--radius-sm);
+            border:1.5px solid var(--border-dk); background:transparent;
+            font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+            color:var(--muted); cursor:pointer;
+          ">Fechar</button>
+          ${item.ativo ? `
+          <button onclick="addToCart('${item.id}', event); document.getElementById('item-detail-modal').remove();" style="
+            flex:2; padding:14px; border-radius:var(--radius-sm);
+            border:none; background:var(--ink); color:white;
+            font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+            cursor:pointer;
+          ">+ Adicionar ao carrinho</button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  window._carrosselIndex = 0;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+function getFotos(item) {
+  if (!item || !item.foto_url) return [];
+  try {
+    const parsed = JSON.parse(item.foto_url);
+    if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    return [item.foto_url];
+  } catch {
+    return [item.foto_url];
+  }
+}
+
+function irParaFoto(index, total) {
+  window._carrosselIndex = index;
+  const track = document.getElementById("carrossel-track");
+  if (track) track.style.transform = `translateX(-${index * 100}%)`;
+  for (let i = 0; i < total; i++) {
+    const b = document.getElementById(`bolinha-${i}`);
+    if (b) b.style.background = i === index ? 'white' : 'rgba(255,255,255,0.45)';
+  }
+}
+
+function carrosselProximo(total) {
+  irParaFoto((window._carrosselIndex + 1) % total, total);
+}
+
+function carrosselAnterior() {
+  const track = document.getElementById("carrossel-track");
+  if (!track) return;
+  const total = track.children.length;
+  irParaFoto((window._carrosselIndex - 1 + total) % total, total);
+}
+    
     function getPrimeiraFoto(item) {
   if (!item || !item.foto_url) return null;
   try {
