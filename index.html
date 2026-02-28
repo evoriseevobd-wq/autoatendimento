@@ -549,6 +549,56 @@
     let tutorialDone = false;
 
     // ═══════════════════════════════
+    // ⏱ SESSÃO 2 HORAS
+    // ═══════════════════════════════
+    const SESSION_KEY = 'fluxon_session_start';
+    const SESSION_TTL = 2 * 60 * 60 * 1000; // 2h em ms
+
+    function checkSession() {
+      const stored = localStorage.getItem(SESSION_KEY);
+      const now    = Date.now();
+
+      if (!stored) {
+        localStorage.setItem(SESSION_KEY, now.toString());
+        return true;
+      }
+
+      if (now - parseInt(stored) > SESSION_TTL) {
+        showSessionExpired();
+        return false;
+      }
+
+      return true;
+    }
+
+    function showSessionExpired() {
+      // Esconde tudo
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('cat-nav-wrap').style.display = 'none';
+
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position: fixed; inset: 0; background: var(--cream);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 16px; padding: 40px; text-align: center; z-index: 9999;
+      `;
+      el.innerHTML = `
+        <div style="font-size:52px">📵</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--ink)">
+          Sessão expirada
+        </div>
+        <p style="font-size:14px;color:var(--muted);max-width:260px;line-height:1.65;font-weight:300">
+          Sua sessão de 2 horas encerrou.<br>
+          Escaneie o QR code da mesa novamente para fazer um novo pedido.
+        </p>
+        <div style="width:40px;height:1px;background:var(--border-dk)"></div>
+        <div style="font-size:32px;animation:bob 1.5s ease infinite">📷</div>
+      `;
+      document.body.appendChild(el);
+    }
+
+    // ═══════════════════════════════
     // 🔦 SPOTLIGHT
     // ═══════════════════════════════
     function showSpotlight() {
@@ -610,6 +660,8 @@
     // INIT
     // ═══════════════════════════════
     async function init() {
+      if (!checkSession()) return; // 🔒 bloqueia se sessão expirada
+
       const params = new URLSearchParams(window.location.search);
       mesaNum = params.get('mesa') || null;
 
@@ -896,6 +948,7 @@
     function resetAll() {
       cart = {};
       tutorialDone = false;
+      localStorage.setItem(SESSION_KEY, Date.now().toString()); // reinicia os 2h
       document.getElementById('success-screen').classList.remove('open');
       document.getElementById('input-name').value = '';
       document.getElementById('input-phone').value = '';
