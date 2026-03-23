@@ -661,11 +661,16 @@
     // ═══════════════════════════════
     // INIT
     // ═══════════════════════════════
-    async function init() {
-      if (!checkSession()) return; // 🔒 bloqueia se sessão expirada
+   async function init() {
+  const params = new URLSearchParams(window.location.search);
+  mesaNum = params.get('mesa') || null;
 
-      const params = new URLSearchParams(window.location.search);
-      mesaNum = params.get('mesa') || null;
+  // Reseta sessão sempre que um novo QR for escaneado
+  if (mesaNum) {
+    localStorage.setItem(SESSION_KEY, Date.now().toString());
+  }
+
+  if (!checkSession()) return;
 
       if (mesaNum) {
         const pill = document.getElementById('mesa-pill');
