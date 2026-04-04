@@ -692,26 +692,35 @@
     }
 
     async function loadRestaurant() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}`);
-        if (!resp.ok) return;
-        const data = await resp.json();
-        document.title = data.name || 'Cardápio';
-        document.getElementById('restaurant-name').textContent = data.name || 'Cardápio';
-      } catch { document.getElementById('restaurant-name').textContent = 'Cardápio'; }
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}/config`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+
+    // Nome
+    document.title = data.nome_exibicao || 'Cardápio';
+    document.getElementById('restaurant-name').textContent = data.nome_exibicao || 'Cardápio';
+
+    // Logo
+    if (data.logo_url) {
+      const logo = document.createElement('img');
+      logo.src = data.logo_url;
+      logo.style.cssText = 'width:48px; height:48px; border-radius:50%; object-fit:cover; margin-bottom:6px;';
+      document.getElementById('restaurant-name').before(logo);
     }
 
-    async function loadCardapio() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/cardapio/${restaurantId}`);
-        if (!resp.ok) throw new Error();
-        const data = await resp.json();
-        cardapioItems = Array.isArray(data) ? data : [];
-        if (!cardapioItems.length) { showError('Nenhum item no cardápio ainda.'); return; }
-        renderCardapio();
-        showSpotlight(); // 🔦
-      } catch { showError('Erro ao carregar cardápio. Tente novamente.'); }
+    // Cores
+    if (data.cor_primaria) {
+      document.documentElement.style.setProperty('--ink', data.cor_primaria);
     }
+    if (data.cor_secundaria) {
+      document.documentElement.style.setProperty('--amber', data.cor_secundaria);
+    }
+
+  } catch {
+    document.getElementById('restaurant-name').textContent = 'Cardápio';
+  }
+}
 
     // ═══════════════════════════════
     // RENDER
