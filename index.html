@@ -721,7 +721,7 @@
       }
     }
 
-   async function loadRestaurant() {
+async function loadRestaurant() {
   try {
     const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}/config`);
     if (!resp.ok) return;
@@ -729,33 +729,23 @@
 
     document.title = 'Cardápio';
 
-    // Nome e logo
+    // Nome do restaurante
     if (cfg.nome_exibicao) {
       document.getElementById('restaurant-name').textContent = cfg.nome_exibicao;
     }
 
+    // Logo
     if (cfg.logo_url) {
       document.getElementById('logo-img').src = cfg.logo_url;
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    // Cor primária → cor de destaque (botões, badges, links)
+    // Cor primária → cor de destaque (botões, preços, categorias)
     if (cfg.cor_primaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
-      document.documentElement.style.setProperty('--ink', cfg.cor_primaria);
-      // Glow
-      const glow = document.createElement('div');
-      glow.style.cssText = `
-        position: fixed; top: -20%; left: 50%;
-        transform: translateX(-50%);
-        width: 100vw; height: 60vh;
-        background: radial-gradient(ellipse, ${cfg.cor_primaria}18 0%, transparent 65%);
-        pointer-events: none; z-index: 0;
-      `;
-      document.body.prepend(glow);
     }
 
-    // Cor secundária → amber (destaques secundários)
+    // Cor secundária → sobrescreve amber se existir
     if (cfg.cor_secundaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
     }
@@ -766,26 +756,26 @@
       document.body.style.background = cfg.cor_fundo;
     }
 
-    // Header usa a cor primária em vez de #000 fixo
-    const header = document.querySelector('.header');
-    if (header && cfg.cor_primaria) {
-      header.style.background = cfg.cor_primaria;
-    }
-
-    // Tema dark/light
+    // Tema controla a cor das letras
     const tema = cfg.tema || 'dark';
     if (tema === 'light') {
+      // Letras escuras — fundo claro
       document.documentElement.style.setProperty('--ink', '#1a1814');
       document.documentElement.style.setProperty('--ink2', '#3d3a35');
       document.documentElement.style.setProperty('--muted', '#555555');
-      document.documentElement.style.setProperty('--border', '#e4dfd8');
-      document.documentElement.style.setProperty('--border-dk', '#ccc7bf');
+      document.documentElement.style.setProperty('--border', 'rgba(0,0,0,0.1)');
+      document.documentElement.style.setProperty('--border-dk', 'rgba(0,0,0,0.18)');
       document.documentElement.style.setProperty('--white', '#ffffff');
       document.documentElement.style.setProperty('--cream2', '#f2ede6');
     } else {
+      // Letras claras — fundo escuro
+      document.documentElement.style.setProperty('--ink', '#fdf8f4');
+      document.documentElement.style.setProperty('--ink2', '#e8ddd5');
       document.documentElement.style.setProperty('--muted', '#9a9590');
-      document.documentElement.style.setProperty('--border', '#e4dfd8');
-      document.documentElement.style.setProperty('--border-dk', '#ccc7bf');
+      document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.1)');
+      document.documentElement.style.setProperty('--border-dk', 'rgba(255,255,255,0.18)');
+      document.documentElement.style.setProperty('--white', '#1a1814');
+      document.documentElement.style.setProperty('--cream2', '#2a2420');
     }
 
   } catch {
