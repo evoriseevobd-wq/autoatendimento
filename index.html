@@ -35,48 +35,72 @@
       padding-bottom: 120px;
     }
 
-    /* ── HEADER ── */
-    .header {
-      background: var(--ink);
-      border-bottom: none;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-inner {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 20px 24px 16px;
-    }
-    .restaurant-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #fff;
-      line-height: 1.05;
-    }
-    .mesa-pill {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      background: var(--ink);
-      color: #fff;
-      border-radius: 999px;
-      padding: 5px 14px 5px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      width: fit-content;
-    }
-    .mesa-pill .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--amber);
-      animation: blink 2s ease infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  /* ── HEADER ── */
+.header {
+  background: #000;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 72px;
+}
+.header-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.restaurant-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.1;
+}
+.mesa-pill {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.04em;
+}
+.mesa-pill.visible { display: flex; }
+.mesa-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: blink 2s ease infinite;
+}
+.logo-wrap {
+  height: 44px;
+  width: auto;
+  max-width: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: none;
+  flex-shrink: 0;
+}
+.logo-wrap.visible { display: block; }
+.logo-wrap img {
+  height: 44px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  display: block;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
     /* ── CAT NAV ── */
     .cat-nav-wrap {
@@ -421,8 +445,10 @@
     }
 
     @media (max-width: 480px) {
-      .restaurant-name { font-size: 26px; }
-      .header-inner { padding: 16px 18px 14px; }
+      .restaurant-name { font-size: 18px; }
+.header-inner { padding: 0 18px; }
+.logo-wrap { max-width: 110px; }
+.logo-wrap img { max-width: 110px; }
       .main { padding: 24px 18px 40px; }
       .item-img-wrap, .item-img-placeholder { width: 76px; height: 76px; }
       .cart-fab { min-width: 220px; padding: 14px 20px; }
@@ -433,14 +459,19 @@
 <body>
 
   <header class="header">
-    <div class="header-inner">
+  <div class="header-inner">
+    <div class="header-text">
       <div class="restaurant-name" id="restaurant-name">Cardápio</div>
       <div class="mesa-pill" id="mesa-pill">
         <div class="dot"></div>
         <span>Mesa <strong id="mesa-num">—</strong></span>
       </div>
     </div>
-  </header>
+    <div class="logo-wrap" id="logo-wrap">
+      <img id="logo-img" src="" alt="Logo" />
+    </div>
+  </div>
+</header>
 
   <div class="cat-nav-wrap" id="cat-nav-wrap" style="display:none;">
     <div class="cat-nav" id="cat-nav"></div>
@@ -673,10 +704,9 @@
   if (!checkSession()) return;
 
       if (mesaNum) {
-        const pill = document.getElementById('mesa-pill');
-        pill.style.display = 'inline-flex';
-        document.getElementById('mesa-num').textContent = mesaNum;
-      }
+  document.getElementById('mesa-pill').classList.add('visible');
+  document.getElementById('mesa-num').textContent = mesaNum;
+}
 
       try {
         const dominio = window.location.hostname;
@@ -691,34 +721,71 @@
       }
     }
 
-    async function loadRestaurant() {
+   async function loadRestaurant() {
   try {
     const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}/config`);
     if (!resp.ok) return;
-    const data = await resp.json();
+    const cfg = await resp.json();
 
-    // Nome
-    document.title = data.nome_exibicao || 'Cardápio';
-    document.getElementById('restaurant-name').textContent = data.nome_exibicao || 'Cardápio';
+    // Título fixo
+    document.title = 'Cardápio';
 
     // Logo
-    if (data.logo_url) {
-      const logo = document.createElement('img');
-      logo.src = data.logo_url;
-      logo.style.cssText = 'width:48px; height:48px; border-radius:50%; object-fit:cover; margin-bottom:6px;';
-      document.getElementById('restaurant-name').before(logo);
+    if (cfg.logo_url) {
+      document.getElementById('logo-img').src = cfg.logo_url;
+      document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    // Cores
-    if (data.cor_primaria) {
-      document.documentElement.style.setProperty('--ink', data.cor_primaria);
+    // Cor primária → --ink (header, botões, textos)
+    if (cfg.cor_primaria) {
+      document.documentElement.style.setProperty('--ink', cfg.cor_primaria);
     }
-    if (data.cor_secundaria) {
-      document.documentElement.style.setProperty('--amber', data.cor_secundaria);
+
+    // Cor secundária → --amber (badge, destaques)
+    if (cfg.cor_secundaria) {
+      document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
+    }
+
+    // Cor de fundo
+    if (cfg.cor_fundo) {
+      document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
+      document.body.style.background = cfg.cor_fundo;
+    }
+
+    // Glow igual à fidelidade
+    if (cfg.cor_primaria) {
+      const glow = document.createElement('div');
+      glow.style.cssText = `
+        position: fixed;
+        top: -20%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100vw;
+        height: 60vh;
+        background: radial-gradient(ellipse, ${cfg.cor_primaria}18 0%, transparent 65%);
+        pointer-events: none;
+        z-index: 0;
+      `;
+      document.body.prepend(glow);
+    }
+
+    // Tema dark/light — só textos e superfícies, não mexe nas cores primária/secundária
+    const tema = cfg.tema || 'dark';
+    if (tema === 'light') {
+      document.documentElement.style.setProperty('--muted', '#555555');
+      document.documentElement.style.setProperty('--border', '#e4dfd8');
+      document.documentElement.style.setProperty('--border-dk', '#ccc7bf');
+      document.documentElement.style.setProperty('--white', '#ffffff');
+      document.documentElement.style.setProperty('--cream2', '#f2ede6');
+      document.documentElement.style.setProperty('--ink2', '#3d3a35');
+    } else {
+      document.documentElement.style.setProperty('--muted', '#9a9590');
+      document.documentElement.style.setProperty('--border', '#e4dfd8');
+      document.documentElement.style.setProperty('--border-dk', '#ccc7bf');
     }
 
   } catch {
-    document.getElementById('restaurant-name').textContent = 'Cardápio';
+    // silencioso, mantém defaults
   }
 }
 
