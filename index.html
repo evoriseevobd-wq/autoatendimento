@@ -8,16 +8,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-  --cream: unset;
-  --cream2: unset;
-  --white: unset;
-  --ink: unset;
-  --ink2: unset;
-  --muted: unset;
-  --border: unset;
-  --border-dk: unset;
-  --amber: unset;
+    
+   :root {
+  --cream:     #0c0a09;
+  --cream2:    #2a2420;
+  --white:     #1a1814;
+  --ink:       #fdf8f4;
+  --ink2:      #e8ddd5;
+  --muted:     #9a9590;
+  --border:    rgba(255,255,255,0.1);
+  --border-dk: rgba(255,255,255,0.18);
+  --amber:     #f97373;
+  --radius:    14px;
+  --radius-sm: 10px;
+  --shadow:    0 2px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -722,60 +728,53 @@ async function loadRestaurant() {
     if (!resp.ok) return;
     const cfg = await resp.json();
 
-    document.title = 'Cardápio';
-
-    // Nome do restaurante
     if (cfg.nome_exibicao) {
       document.getElementById('restaurant-name').textContent = cfg.nome_exibicao;
+      document.title = cfg.nome_exibicao + ' — Cardápio';
     }
 
-    // Logo
     if (cfg.logo_url) {
       document.getElementById('logo-img').src = cfg.logo_url;
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    // Cor primária → cor de destaque (botões, preços, categorias)
+    // cor_primaria → amber (botões, badges, spinner)
     if (cfg.cor_primaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
     }
 
-    // Cor secundária → sobrescreve amber se existir
+    // cor_secundaria sobrescreve amber se existir
     if (cfg.cor_secundaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
     }
 
-    // Cor de fundo
+    // cor_fundo → fundo da página
     if (cfg.cor_fundo) {
       document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
       document.body.style.background = cfg.cor_fundo;
     }
 
-    // Tema controla a cor das letras
+    // tema controla todas as variáveis de texto, borda e superfície
     const tema = cfg.tema || 'dark';
     if (tema === 'light') {
-      // Letras escuras — fundo claro
-      document.documentElement.style.setProperty('--ink', '#1a1814');
-      document.documentElement.style.setProperty('--ink2', '#3d3a35');
-      document.documentElement.style.setProperty('--muted', '#555555');
-      document.documentElement.style.setProperty('--border', 'rgba(0,0,0,0.1)');
+      document.documentElement.style.setProperty('--ink',       '#1a1814');
+      document.documentElement.style.setProperty('--ink2',      '#3d3a35');
+      document.documentElement.style.setProperty('--muted',     '#555555');
+      document.documentElement.style.setProperty('--border',    'rgba(0,0,0,0.1)');
       document.documentElement.style.setProperty('--border-dk', 'rgba(0,0,0,0.18)');
-      document.documentElement.style.setProperty('--white', '#ffffff');
-      document.documentElement.style.setProperty('--cream2', '#f2ede6');
+      document.documentElement.style.setProperty('--white',     '#ffffff');
+      document.documentElement.style.setProperty('--cream2',    '#f2ede6');
     } else {
-      // Letras claras — fundo escuro
-      document.documentElement.style.setProperty('--ink', '#fdf8f4');
-      document.documentElement.style.setProperty('--ink2', '#e8ddd5');
-      document.documentElement.style.setProperty('--muted', '#9a9590');
-      document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.1)');
+      document.documentElement.style.setProperty('--ink',       '#fdf8f4');
+      document.documentElement.style.setProperty('--ink2',      '#e8ddd5');
+      document.documentElement.style.setProperty('--muted',     '#9a9590');
+      document.documentElement.style.setProperty('--border',    'rgba(255,255,255,0.1)');
       document.documentElement.style.setProperty('--border-dk', 'rgba(255,255,255,0.18)');
-      document.documentElement.style.setProperty('--white', '#1a1814');
-      document.documentElement.style.setProperty('--cream2', '#2a2420');
+      document.documentElement.style.setProperty('--white',     '#1a1814');
+      document.documentElement.style.setProperty('--cream2',    '#2a2420');
     }
 
-  } catch {
-    // silencioso, mantém defaults
-  }
+  } catch { /* silencioso */ }
 }
 
     // ═══════════════════════════════
