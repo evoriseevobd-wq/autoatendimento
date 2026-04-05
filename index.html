@@ -727,21 +727,35 @@
     if (!resp.ok) return;
     const cfg = await resp.json();
 
-    // Título fixo
     document.title = 'Cardápio';
 
-    // Logo
+    // Nome e logo
+    if (cfg.nome_exibicao) {
+      document.getElementById('restaurant-name').textContent = cfg.nome_exibicao;
+    }
+
     if (cfg.logo_url) {
       document.getElementById('logo-img').src = cfg.logo_url;
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    // Cor primária → --ink (header, botões, textos)
+    // Cor primária → cor de destaque (botões, badges, links)
     if (cfg.cor_primaria) {
+      document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
       document.documentElement.style.setProperty('--ink', cfg.cor_primaria);
+      // Glow
+      const glow = document.createElement('div');
+      glow.style.cssText = `
+        position: fixed; top: -20%; left: 50%;
+        transform: translateX(-50%);
+        width: 100vw; height: 60vh;
+        background: radial-gradient(ellipse, ${cfg.cor_primaria}18 0%, transparent 65%);
+        pointer-events: none; z-index: 0;
+      `;
+      document.body.prepend(glow);
     }
 
-    // Cor secundária → --amber (badge, destaques)
+    // Cor secundária → amber (destaques secundários)
     if (cfg.cor_secundaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
     }
@@ -752,32 +766,22 @@
       document.body.style.background = cfg.cor_fundo;
     }
 
-    // Glow igual à fidelidade
-    if (cfg.cor_primaria) {
-      const glow = document.createElement('div');
-      glow.style.cssText = `
-        position: fixed;
-        top: -20%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100vw;
-        height: 60vh;
-        background: radial-gradient(ellipse, ${cfg.cor_primaria}18 0%, transparent 65%);
-        pointer-events: none;
-        z-index: 0;
-      `;
-      document.body.prepend(glow);
+    // Header usa a cor primária em vez de #000 fixo
+    const header = document.querySelector('.header');
+    if (header && cfg.cor_primaria) {
+      header.style.background = cfg.cor_primaria;
     }
 
-    // Tema dark/light — só textos e superfícies, não mexe nas cores primária/secundária
+    // Tema dark/light
     const tema = cfg.tema || 'dark';
     if (tema === 'light') {
+      document.documentElement.style.setProperty('--ink', '#1a1814');
+      document.documentElement.style.setProperty('--ink2', '#3d3a35');
       document.documentElement.style.setProperty('--muted', '#555555');
       document.documentElement.style.setProperty('--border', '#e4dfd8');
       document.documentElement.style.setProperty('--border-dk', '#ccc7bf');
       document.documentElement.style.setProperty('--white', '#ffffff');
       document.documentElement.style.setProperty('--cream2', '#f2ede6');
-      document.documentElement.style.setProperty('--ink2', '#3d3a35');
     } else {
       document.documentElement.style.setProperty('--muted', '#9a9590');
       document.documentElement.style.setProperty('--border', '#e4dfd8');
