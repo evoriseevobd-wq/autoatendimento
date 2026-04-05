@@ -1208,6 +1208,24 @@ function carrosselAnterior() {
     return item.foto_url;
   }
 }
+
+async function loadCardapio() {
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/cardapio/${restaurantId}`);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    cardapioItems = Array.isArray(data) ? data.filter(item => item.ativo) : [];
+    if (cardapioItems.length === 0) {
+      showError('Nenhum item disponível no cardápio.');
+      return;
+    }
+    renderCardapio();
+    showSpotlight();
+  } catch {
+    showError('Erro ao carregar os itens do cardápio.');
+  }
+}
+    
     init();
   </script>
 </body>
