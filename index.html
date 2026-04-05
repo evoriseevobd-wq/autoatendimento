@@ -724,9 +724,14 @@ html { scroll-behavior: smooth; }
 
 async function loadRestaurant() {
   try {
+    console.log('🔧 Buscando config para:', restaurantId);
     const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}/config`);
-    if (!resp.ok) return;
+    if (!resp.ok) {
+      console.error('❌ Config falhou:', resp.status);
+      return;
+    }
     const cfg = await resp.json();
+    console.log('✅ Config recebida:', cfg);
 
     if (cfg.nome_exibicao) {
       document.getElementById('restaurant-name').textContent = cfg.nome_exibicao;
@@ -738,24 +743,22 @@ async function loadRestaurant() {
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    // cor_primaria → amber (botões, badges, spinner)
     if (cfg.cor_primaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
     }
 
-    // cor_secundaria sobrescreve amber se existir
     if (cfg.cor_secundaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
     }
 
-    // cor_fundo → fundo da página
     if (cfg.cor_fundo) {
       document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
       document.body.style.background = cfg.cor_fundo;
     }
 
-    // tema controla todas as variáveis de texto, borda e superfície
     const tema = cfg.tema || 'dark';
+    console.log('🎨 Tema:', tema);
+
     if (tema === 'light') {
       document.documentElement.style.setProperty('--ink',       '#1a1814');
       document.documentElement.style.setProperty('--ink2',      '#3d3a35');
@@ -774,7 +777,9 @@ async function loadRestaurant() {
       document.documentElement.style.setProperty('--cream2',    '#2a2420');
     }
 
-  } catch { /* silencioso */ }
+  } catch(err) {
+    console.error('❌ Erro em loadRestaurant:', err);
+  }
 }
 
     // ═══════════════════════════════
