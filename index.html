@@ -755,14 +755,15 @@ async function loadRestaurant() {
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-    if (cfg.cor_primaria) {
+   if (cfg.cor_primaria) {
       document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
     }
 
+    // cor_secundaria vai para outra variável — não sobrescreve --amber
     if (cfg.cor_secundaria) {
-      document.documentElement.style.setProperty('--amber', cfg.cor_secundaria);
+      document.documentElement.style.setProperty('--ink2', cfg.cor_secundaria);
     }
-
+    
     if (cfg.cor_fundo) {
       document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
       document.body.style.background = cfg.cor_fundo;
