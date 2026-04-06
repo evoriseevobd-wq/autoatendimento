@@ -709,30 +709,43 @@ html { scroll-behavior: smooth; }
   const params = new URLSearchParams(window.location.search);
   mesaNum = params.get('mesa') || null;
 
-  // Reseta sessão sempre que um novo QR for escaneado
   if (mesaNum) {
     localStorage.setItem(SESSION_KEY, Date.now().toString());
   }
 
   if (!checkSession()) return;
 
-      if (mesaNum) {
-  document.getElementById('mesa-pill').classList.add('visible');
-  document.getElementById('mesa-num').textContent = mesaNum;
-}
+  if (mesaNum) {
+    document.getElementById('mesa-pill').classList.add('visible');
+    document.getElementById('mesa-num').textContent = mesaNum;
+  }
 
-      try {
-        const dominio = window.location.hostname;
-        const resp = await fetch(`${API_BASE}/api/v1/dominio-cardapio/${dominio}`);
-        if (!resp.ok) throw new Error();
-        const data = await resp.json();
-        restaurantId = data.restaurant_id;
-        await loadRestaurant();
-        await loadCardapio();
-      } catch {
-        showError('Cardápio não encontrado. Verifique o link.');
-      }
+  try {
+    const dominio = window.location.hostname;
+    console.log('🌐 Domínio detectado:', dominio);
+    console.log('🔗 API_BASE:', API_BASE);
+
+    const resp = await fetch(`${API_BASE}/api/v1/dominio-cardapio/${dominio}`);
+    console.log('📡 Status dominio-cardapio:', resp.status);
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('❌ Erro dominio-cardapio:', errText);
+      throw new Error('dominio');
     }
+
+    const data = await resp.json();
+    console.log('✅ restaurant_id:', data.restaurant_id);
+    restaurantId = data.restaurant_id;
+
+    await loadRestaurant();
+    await loadCardapio();
+
+  } catch (e) {
+    console.error('❌ Erro no init:', e);
+    showError('Cardápio não encontrado. Verifique o link.');
+  }
+}
 
 async function loadRestaurant() {
   try {
