@@ -997,11 +997,10 @@ card.addEventListener('click', () => openItemDetailModal(item));
     }
 
     async function submitOrder() {
-      const name    = document.getElementById('input-name').value.trim();
-      const phone   = document.getElementById('input-phone').value.trim();
-      const payment = document.getElementById('input-payment').value;
-      if (!name)    { alert('Por favor, informe seu nome.'); document.getElementById('input-name').focus(); return; }
-      if (!payment) { alert('Por favor, selecione a forma de pagamento.'); return; }
+      const name  = document.getElementById('input-name').value.trim();
+      const phone = document.getElementById('input-phone').value.trim();
+      const notes = document.getElementById('input-notes').value.trim();
+      if (!name) { alert('Por favor, informe seu nome.'); document.getElementById('input-name').focus(); return; }
 
       const items = Object.values(cart);
       const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
