@@ -1023,9 +1023,8 @@ card.addEventListener('click', () => openItemDetailModal(item));
             client_phone: phone || null,
             itens, total_price: total,
             service_type: 'local',
-            payment_method: payment,
             origin: 'autoatendimento',
-            notes: mesaNum ? `Mesa ${mesaNum}` : ''
+            notes: mesaNum ? `Mesa ${mesaNum}${notes ? ` — ${notes}` : ''}` : notes
           })
         });
         const data = await resp.json();
