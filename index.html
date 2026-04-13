@@ -751,6 +751,7 @@ async function loadRestaurant() {
     }
     const cfg = await resp.json();
     console.log('✅ Config recebida:', cfg);
+    console.log('🎨 Cores:', cfg.cor_primaria, cfg.cor_secundaria, cfg.cor_fundo, cfg.tema);
 
     if (cfg.nome_exibicao) {
       document.getElementById('restaurant-name').textContent = cfg.nome_exibicao;
