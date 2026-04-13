@@ -811,13 +811,18 @@ async function loadRestaurant() {
       document.getElementById('cat-nav-wrap').style.display = 'block';
 
       const categorias = {};
-      cardapioItems
-        .sort((a, b) => (a.ordem||0) - (b.ordem||0))
-        .forEach(item => {
-          const cat = item.categoria || 'Geral';
-          if (!categorias[cat]) categorias[cat] = [];
-          categorias[cat].push(item);
-        });
+const ordemCategorias = [];
+
+cardapioItems
+  .sort((a, b) => (a.ordem||0) - (b.ordem||0))
+  .forEach(item => {
+    const cat = item.categoria || 'Geral';
+    if (!categorias[cat]) {
+      categorias[cat] = [];
+      ordemCategorias.push(cat);
+    }
+    categorias[cat].push(item);
+  });
 
       const catNav = document.getElementById('cat-nav');
       catNav.innerHTML = '';
@@ -839,7 +844,8 @@ async function loadRestaurant() {
       const content = document.getElementById('cardapio-content');
       content.innerHTML = '';
 
-      Object.entries(categorias).forEach(([cat, items], idx) => {
+     ordemCategorias.forEach((cat, idx) => {
+  const items = categorias[cat];
         const section = document.createElement('div');
         section.className = 'category-section'; // fechado por padrão
         section.id = `cat-${slugify(cat)}`;
