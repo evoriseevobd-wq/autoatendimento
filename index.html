@@ -851,8 +851,6 @@ ordemCategorias.forEach(cat => {
       });
 
       // Esconde a nav de categorias
-      document.getElementById('cat-nav-wrap').style.display = 'none';
-
       const content = document.getElementById('cardapio-content');
       content.innerHTML = '';
 
@@ -904,7 +902,7 @@ card.addEventListener('click', () => openItemDetailModal(item));
             <div class="item-price">${formatCurrency(item.preco)}</div>
             ${!item.ativo
               ? `<span class="item-inactive-tag">Indisponível</span>`
-              : inCart
+              : (inCart && !item.opcoes?.length)
                 ? `<div class="item-counter">
                     <button class="counter-btn" onclick="changeQty('${item.id}',-1,event)">−</button>
                     <span class="counter-qty">${inCart.qty}</span>
