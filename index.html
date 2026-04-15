@@ -486,15 +486,7 @@ html { scroll-behavior: smooth; }
   </div>
 </header>
 
- <div class="cat-nav-wrap" id="cat-nav-wrap" style="display:none;">
-  <div style="max-width:700px; margin:0 auto; padding:8px 24px 0;">
-    <input id="search-input" type="text" placeholder="🔍 Buscar no cardápio..."
-      oninput="filtrarCardapio(this.value)"
-      style="width:100%; padding:10px 16px; border-radius:999px;
-      border:1.5px solid var(--border-dk); background:var(--cream2);
-      color:var(--ink); font-family:'Outfit',sans-serif; font-size:14px;
-      outline:none;" />
-  </div>
+  <div class="cat-nav-wrap" id="cat-nav-wrap" style="display:none;">
     <div class="cat-nav" id="cat-nav"></div>
   </div>
 
@@ -620,6 +612,7 @@ html { scroll-behavior: smooth; }
     function showSessionExpired() {
       // Esconde tudo
       document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('cat-nav-wrap').style.display = 'none';
 
       const el = document.createElement('div');
       el.style.cssText = `
@@ -851,6 +844,8 @@ ordemCategorias.forEach(cat => {
       });
 
       // Esconde a nav de categorias
+      document.getElementById('cat-nav-wrap').style.display = 'none';
+
       const content = document.getElementById('cardapio-content');
       content.innerHTML = '';
 
@@ -902,7 +897,7 @@ card.addEventListener('click', () => openItemDetailModal(item));
             <div class="item-price">${formatCurrency(item.preco)}</div>
             ${!item.ativo
               ? `<span class="item-inactive-tag">Indisponível</span>`
-              : (inCart && !item.opcoes?.length)
+              : inCart
                 ? `<div class="item-counter">
                     <button class="counter-btn" onclick="changeQty('${item.id}',-1,event)">−</button>
                     <span class="counter-qty">${inCart.qty}</span>
@@ -925,21 +920,37 @@ card.addEventListener('click', () => openItemDetailModal(item));
     // CART
     // ═══════════════════════════════
     function addToCart(itemId, e) {
-  if (e) e.stopPropagation();
-  const item = cardapioItems.find(i => i.id === itemId);
-  if (!item) return;
+      if (e) e.stopPropagation();
+      const item = cardapioItems.find(i => i.id === itemId);
+      if (!item) return;
+      cart[itemId] = { item, qty: 1 };
+      refreshItemCard(itemId);
+      updateCartUI();
+    }
 
-  if (item.opcoes && item.opcoes.length > 0) {
-    document.getElementById('item-detail-modal')?.remove();
-    abrirModalOpcoes(item);
-    return;
-  }
+    function changeQty(itemId, delta, e) {
+      if (e) e.stopPropagation();
+      if (!cart[itemId]) return;
+      cart[itemId].qty += delta;
+      if (cart[itemId].qty <= 0) delete cart[itemId];
+      refreshItemCard(itemId);
+      updateCartUI();
+    }
 
-  cart[itemId] = { item, qty: (cart[itemId]?.qty || 0) + 1 };
-  document.getElementById('item-detail-modal')?.remove();
-  refreshItemCard(itemId);
-  updateCartUI();
-}
+    function updateCartUI() {
+      const items      = Object.values(cart);
+      const totalQty   = items.reduce((s,c) => s + c.qty, 0);
+      const totalPrice = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
+      const fab = document.getElementById('cart-fab');
+      if (!totalQty) { fab.classList.add('hidden'); }
+      else {
+        fab.classList.remove('hidden');
+        document.getElementById('cart-count').textContent = totalQty;
+        document.getElementById('cart-fab-price').textContent = formatCurrency(totalPrice);
+      }
+      renderCartBody();
+      document.getElementById('cart-total').textContent = formatCurrency(totalPrice);
+    }
 
     function renderCartBody() {
       const body  = document.getElementById('cart-body');
@@ -1160,7 +1171,7 @@ modal.style.cssText = `
             color:var(--muted); cursor:pointer;
           ">Fechar</button>
           ${item.ativo ? `
-          <button onclick="addToCart('${item.id}', event);" style="
+          <button onclick="addToCart('${item.id}', event); document.getElementById('item-detail-modal').remove();" style="
             flex:2; padding:14px; border-radius:var(--radius-sm);
             border:none; background:var(--ink); color:white;
             font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
@@ -1207,80 +1218,6 @@ function carrosselAnterior() {
   if (!track) return;
   const total = track.children.length;
   irParaFoto((window._carrosselIndex - 1 + total) % total, total);
-}
-
-    function abrirModalOpcoes(item) {
-  const existing = document.getElementById("opcoes-select-modal");
-  if (existing) existing.remove();
-
-  const modal = document.createElement("div");
-  modal.id = "opcoes-select-modal";
-  modal.style.cssText = `
-    position:fixed; inset:0; background:rgba(26,24,20,0.6);
-    display:flex; align-items:flex-end; justify-content:center;
-    z-index:900; backdrop-filter:blur(4px);
-  `;
-
-  modal.innerHTML = `
-    <div style="
-      background:var(--white); border-radius:24px 24px 0 0;
-      width:100%; max-width:500px; padding:24px 24px 40px;
-      animation:slideUp 0.3s ease;
-    ">
-      <div style="width:36px; height:3px; background:var(--border-dk); border-radius:999px; margin:0 auto 20px;"></div>
-      <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:var(--ink); margin-bottom:6px;">
-        ${escHtml(item.nome)}
-      </div>
-      <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Escolha uma opção:</p>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        ${item.opcoes.map(op => `
-          <button onclick="selecionarOpcaoCardapio('${item.id}', '${escHtml(op.nome)}', ${op.preco})"
-            style="width:100%; padding:16px; border-radius:14px;
-            border:1.5px solid var(--border-dk); background:transparent;
-            display:flex; justify-content:space-between; align-items:center;
-            font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
-            color:var(--ink); cursor:pointer; transition:all 0.15s ease;"
-            onmouseover="this.style.background='var(--cream2)'"
-            onmouseout="this.style.background='transparent'">
-            <span>${escHtml(op.nome)}</span>
-            <span style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700;">
-              ${formatCurrency(op.preco)}
-            </span>
-          </button>
-        `).join('')}
-      </div>
-      <button onclick="document.getElementById('opcoes-select-modal').remove()" style="
-        width:100%; margin-top:16px; padding:14px; border-radius:14px;
-        border:1.5px solid var(--border-dk); background:transparent;
-        font-family:'Outfit',sans-serif; font-size:14px; font-weight:500;
-        color:var(--muted); cursor:pointer;
-      ">Cancelar</button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-}
-
-function selecionarOpcaoCardapio(itemId, nomeOpcao, preco) {
-  const item = cardapioItems.find(i => i.id === itemId);
-  if (!item) return;
-
-  const chave = `${itemId}_${nomeOpcao}`;
-  const nomeCompleto = `${item.nome} - ${nomeOpcao}`;
-
-  if (cart[chave]) {
-    cart[chave].qty++;
-  } else {
-    cart[chave] = {
-      item: { ...item, id: chave, nome: nomeCompleto, preco },
-      qty: 1
-    };
-  }
-
-  document.getElementById('opcoes-select-modal')?.remove();
-  document.getElementById('item-detail-modal')?.remove();
-  updateCartUI();
 }
     
     function getPrimeiraFoto(item) {
