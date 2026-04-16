@@ -468,6 +468,46 @@ html { scroll-behavior: smooth; }
       .spotlight-label { font-size: 13px; }
     }
   </style>
+  <style>
+  .search-wrap {
+    background: #000;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky;
+    top: 72px;
+    z-index: 95;
+  }
+  .search-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 10px 24px;
+  }
+  .search-input {
+    width: 100%;
+    padding: 9px 16px 9px 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: rgba(255,255,255,0.2); }
+  .search-wrap-inner {
+    position: relative;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+</style>
 </head>
 <body>
 
@@ -485,6 +525,15 @@ html { scroll-behavior: smooth; }
     </div>
   </div>
 </header>
+
+  <div class="search-wrap" id="search-wrap" style="display:none;">
+    <div class="search-inner">
+      <div class="search-wrap-inner">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-input" placeholder="Buscar no cardápio..." oninput="filtrarCardapio(this.value)" />
+      </div>
+    </div>
+  </div>
 
   <div class="cat-nav-wrap" id="cat-nav-wrap" style="display:none;">
     <div class="cat-nav" id="cat-nav"></div>
@@ -641,6 +690,37 @@ html { scroll-behavior: smooth; }
     // ═══════════════════════════════
     function showSpotlight() {
       setTimeout(() => {
+        // Apresenta search primeiro
+        const searchEl = document.getElementById('search-input');
+        if (searchEl) {
+          const searchWrap = document.getElementById('search-wrap');
+          const rect = searchWrap.getBoundingClientRect();
+          const overlay = document.getElementById('spotlight-overlay');
+          const label = document.getElementById('spotlight-label');
+          const hole = document.createElement('div');
+          hole.className = 'spotlight-hole';
+          hole.style.left = (rect.left - 8) + 'px';
+          hole.style.top = (rect.top - 8) + 'px';
+          hole.style.width = (rect.width + 16) + 'px';
+          hole.style.height = (rect.height + 16) + 'px';
+          overlay.appendChild(hole);
+          label.innerHTML = `<span class="s-icon">🔍</span>Busque qualquer item aqui`;
+          label.style.top = (rect.bottom + 24) + 'px';
+          label.style.bottom = 'auto';
+          overlay.classList.remove('hidden');
+          label.classList.remove('hidden');
+          overlay.addEventListener('click', () => {
+            hole.remove();
+            showSpotlightCategoria();
+          }, { once: true });
+          return;
+        }
+        showSpotlightCategoria();
+    }, 500);
+}
+
+function showSpotlightCategoria() {
+    setTimeout(() => {
         const firstTitle = document.querySelector('.category-title');
         if (!firstTitle) return;
 
@@ -673,10 +753,9 @@ html { scroll-behavior: smooth; }
         label.classList.remove('hidden');
 
         // Qualquer toque fora fecha
-        overlay.addEventListener('click', dismissSpotlight, { once: true });
-
-      }, 500);
-    }
+      overlay.addEventListener('click', dismissSpotlight, { once: true });
+    }, 100);
+}
 
     function dismissSpotlight() {
       document.getElementById('spotlight-overlay').classList.add('hidden');
@@ -809,7 +888,7 @@ async function loadRestaurant() {
     function renderCardapio() {
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('cardapio-content').style.display = 'block';
-      document.getElementById('cat-nav-wrap').style.display = 'block';
+      document.getElementById('search-wrap').style.display = 'block';
 
       const categorias = {};
 const ordemCategorias = [];
@@ -882,9 +961,10 @@ ordemCategorias.forEach(cat => {
     function buildItemCard(item) {
       const card = document.createElement('div');
       card.className = 'item-card' + (!item.ativo ? ' inactive' : '');
-card.addEventListener('click', () => openItemDetailModal(item));
+      card.addEventListener('click', () => openItemDetailModal(item));
       card.id = `item-card-${item.id}`;
       const inCart = cart[item.id];
+      const temVariacao = Array.isArray(item.opcoes) && item.opcoes.length > 0;
 
       card.innerHTML = `
        ${getPrimeiraFoto(item)
@@ -894,26 +974,21 @@ card.addEventListener('click', () => openItemDetailModal(item));
           <div class="item-name">${escHtml(item.nome)}</div>
           ${item.descricao ? `<div class="item-desc">${escHtml(item.descricao)}</div>` : ''}
           <div class="item-footer">
-            <div class="item-price">${formatCurrency(item.preco)}</div>
+            <div class="item-price">${formatCurrency(temVariacao ? item.opcoes[0].preco : item.preco)}</div>
             ${!item.ativo
               ? `<span class="item-inactive-tag">Indisponível</span>`
-              : inCart
-                ? `<div class="item-counter">
-                    <button class="counter-btn" onclick="changeQty('${item.id}',-1,event)">−</button>
-                    <span class="counter-qty">${inCart.qty}</span>
-                    <button class="counter-btn" onclick="changeQty('${item.id}',1,event)">+</button>
-                   </div>`
-                : `<button class="add-btn" onclick="addToCart('${item.id}',event)">+</button>`}
+              : temVariacao
+                ? `<button class="add-btn" onclick="event.stopPropagation(); openItemDetailModal(${JSON.stringify(item).replace(/'/g, '&#39;').replace(/"/g, '&quot;')})">+</button>`
+                : inCart
+                  ? `<div class="item-counter">
+                      <button class="counter-btn" onclick="changeQty('${item.id}',-1,event)">−</button>
+                      <span class="counter-qty">${inCart.qty}</span>
+                      <button class="counter-btn" onclick="changeQty('${item.id}',1,event)">+</button>
+                     </div>`
+                  : `<button class="add-btn" onclick="addToCart('${item.id}',event)">+</button>`}
           </div>
         </div>`;
       return card;
-    }
-
-    function refreshItemCard(itemId) {
-      const item = cardapioItems.find(i => i.id === itemId);
-      if (!item) return;
-      const old = document.getElementById(`item-card-${itemId}`);
-      if (old) old.replaceWith(buildItemCard(item));
     }
 
     // ═══════════════════════════════
@@ -1091,99 +1166,137 @@ function openItemDetailModal(item) {
 
   const fotos = getFotos(item);
   const temFotos = fotos.length > 0;
+  const opcoes = Array.isArray(item.opcoes) ? item.opcoes : [];
+  const temVariacao = opcoes.length > 0;
+
+  let selectedOpcao = temVariacao ? opcoes[0] : null;
 
   const modal = document.createElement("div");
   modal.id = "item-detail-modal";
-modal.style.cssText = `
+  modal.style.cssText = `
     position:fixed; inset:0; background:rgba(26,24,20,0.6);
     display:flex; align-items:center; justify-content:center;
     z-index:800; backdrop-filter:blur(4px); padding:24px;
   `;
 
- modal.innerHTML = `
-    <div style="
-      background:var(--white); border-radius:24px;
-      width:calc(100% - 48px); max-width:500px; max-height:90vh;
-      overflow-y:auto;
-      animation:slideUp 0.3s ease;
-    ">
-      ${temFotos ? `
-      <div style="position:relative; overflow:hidden; border-radius:24px 24px 0 0;">
-        <div id="carrossel-track" style="display:flex; transition:transform 0.3s ease;">
-          ${fotos.map(url => `
-            <img src="${url}" style="min-width:100%; height:320px; object-fit:cover; flex-shrink:0;" />
-          `).join('')}
-        </div>
-        ${fotos.length > 1 ? `
-        <button onclick="carrosselAnterior()" style="
-          position:absolute; left:12px; top:50%; transform:translateY(-50%);
-          width:36px; height:36px; border-radius:50%; border:none;
-          background:rgba(0,0,0,0.5); color:white; font-size:20px;
-          cursor:pointer; display:flex; align-items:center; justify-content:center;
-        ">‹</button>
-        <button onclick="carrosselProximo(${fotos.length})" style="
-          position:absolute; right:12px; top:50%; transform:translateY(-50%);
-          width:36px; height:36px; border-radius:50%; border:none;
-          background:rgba(0,0,0,0.5); color:white; font-size:20px;
-          cursor:pointer; display:flex; align-items:center; justify-content:center;
-        ">›</button>
-        <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px;">
-          ${fotos.map((_, i) => `
-            <div id="bolinha-${i}" onclick="irParaFoto(${i}, ${fotos.length})" style="
-              width:8px; height:8px; border-radius:50%; cursor:pointer;
-              background:${i === 0 ? 'white' : 'rgba(255,255,255,0.45)'};
-              transition:all 0.2s;
-            "></div>
-          `).join('')}
-        </div>
-        ` : ''}
-      </div>
-      ` : ''}
+  function getPrecoAtual() {
+    return selectedOpcao ? selectedOpcao.preco : item.preco;
+  }
 
-      <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-          <div>
-            <div style="font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:var(--ink);">
-              ${escHtml(item.nome)}
-            </div>
-            <div style="font-size:12px; font-weight:600; color:var(--muted); 
-              background:var(--cream2); padding:3px 12px; border-radius:999px; 
-              display:inline-block; margin-top:6px;">
-              ${escHtml(item.categoria || 'Geral')}
-            </div>
+  function buildModal() {
+    return `
+      <div style="
+        background:var(--white); border-radius:24px;
+        width:calc(100% - 48px); max-width:500px; max-height:90vh;
+        overflow-y:auto;
+        animation:slideUp 0.3s ease;
+      ">
+        ${temFotos ? `
+        <div style="position:relative; overflow:hidden; border-radius:24px 24px 0 0;">
+          <div id="carrossel-track" style="display:flex; transition:transform 0.3s ease;">
+            ${fotos.map(url => `
+              <img src="${url}" style="min-width:100%; height:260px; object-fit:cover; flex-shrink:0;" />
+            `).join('')}
           </div>
-          <div style="font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--ink); flex-shrink:0;">
-            ${formatCurrency(item.preco)}
+          ${fotos.length > 1 ? `
+          <button onclick="carrosselAnterior()" style="
+            position:absolute; left:12px; top:50%; transform:translateY(-50%);
+            width:36px; height:36px; border-radius:50%; border:none;
+            background:rgba(0,0,0,0.5); color:white; font-size:20px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;">‹</button>
+          <button onclick="carrosselProximo(${fotos.length})" style="
+            position:absolute; right:12px; top:50%; transform:translateY(-50%);
+            width:36px; height:36px; border-radius:50%; border:none;
+            background:rgba(0,0,0,0.5); color:white; font-size:20px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;">›</button>
+          <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px;">
+            ${fotos.map((_, i) => `
+              <div id="bolinha-${i}" onclick="irParaFoto(${i}, ${fotos.length})" style="
+                width:8px; height:8px; border-radius:50%; cursor:pointer;
+                background:${i === 0 ? 'white' : 'rgba(255,255,255,0.45)'};
+                transition:all 0.2s;"></div>
+            `).join('')}
           </div>
-        </div>
-
-        ${item.descricao ? `
-        <p style="font-size:14px; color:var(--ink2); line-height:1.65; font-weight:300;">
-          ${escHtml(item.descricao)}
-        </p>
-        ` : ''}
-
-        <div style="display:flex; gap:10px; margin-top:4px;">
-          <button onclick="document.getElementById('item-detail-modal').remove()" style="
-            flex:1; padding:14px; border-radius:var(--radius-sm);
-            border:1.5px solid var(--border-dk); background:transparent;
-            font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
-            color:var(--muted); cursor:pointer;
-          ">Fechar</button>
-          ${item.ativo ? `
-          <button onclick="addToCart('${item.id}', event); document.getElementById('item-detail-modal').remove();" style="
-            flex:2; padding:14px; border-radius:var(--radius-sm);
-            border:none; background:var(--ink); color:white;
-            font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
-            cursor:pointer;
-          ">+ Adicionar ao carrinho</button>
           ` : ''}
         </div>
-      </div>
-    </div>
-  `;
+        ` : ''}
 
+        <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:var(--ink);">
+                ${escHtml(item.nome)}
+              </div>
+              <div style="font-size:12px; font-weight:600; color:var(--muted);
+                background:var(--cream2); padding:3px 12px; border-radius:999px;
+                display:inline-block; margin-top:6px;">
+                ${escHtml(item.categoria || 'Geral')}
+              </div>
+            </div>
+            <div id="modal-preco" style="font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--ink); flex-shrink:0;">
+              ${formatCurrency(getPrecoAtual())}
+            </div>
+          </div>
+
+          ${item.descricao ? `
+          <p style="font-size:14px; color:var(--ink2); line-height:1.65; font-weight:300;">
+            ${escHtml(item.descricao)}
+          </p>
+          ` : ''}
+
+          ${temVariacao ? `
+          <div>
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha uma opção</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;" id="opcoes-pills">
+              ${opcoes.map((op, idx) => `
+                <button onclick="selecionarOpcao(${idx})" id="pill-${idx}" style="
+                  padding:7px 16px; border-radius:999px; cursor:pointer;
+                  font-family:'Outfit',sans-serif; font-size:13px; font-weight:600;
+                  transition:all 0.18s ease;
+                  ${idx === 0
+                    ? 'background:var(--ink); color:#fff; border:1.5px solid var(--ink);'
+                    : 'background:transparent; color:var(--muted); border:1.5px solid var(--border-dk);'}
+                ">
+                  ${escHtml(op.nome)} — ${formatCurrency(op.preco)}
+                </button>
+              `).join('')}
+            </div>
+            ${opcoes[0]?.texto_livre ? `
+            <input id="texto-livre-input" placeholder="Ex: Mussarela e Frango com Catupiry" style="
+              margin-top:12px; width:100%; padding:11px 14px; border-radius:10px;
+              border:1.5px solid var(--border-dk); background:var(--cream);
+              color:var(--ink); font-family:'Outfit',sans-serif; font-size:14px; outline:none;
+            "/>
+            ` : ''}
+          </div>
+          ` : ''}
+
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <button onclick="document.getElementById('item-detail-modal').remove()" style="
+              flex:1; padding:14px; border-radius:var(--radius-sm);
+              border:1.5px solid var(--border-dk); background:transparent;
+              font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+              color:var(--muted); cursor:pointer;">Fechar</button>
+            ${item.ativo ? `
+            <button id="btn-adicionar-modal" onclick="adicionarDoModal('${item.id}')" style="
+              flex:2; padding:14px; border-radius:var(--radius-sm);
+              border:none; background:var(--ink); color:white;
+              font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+              cursor:pointer;">+ Adicionar ao carrinho</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  
+  modal.innerHTML = buildModal();
   window._carrosselIndex = 0;
+  window._selectedOpcaoIdx = 0;
+  window._currentItemOpcoes = opcoes;
+  window._currentItemId = item.id;
+
   document.body.appendChild(modal);
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 }
@@ -1197,6 +1310,96 @@ function getFotos(item) {
   } catch {
     return [item.foto_url];
   }
+}
+
+    function selecionarOpcao(idx) {
+  window._selectedOpcaoIdx = idx;
+  const opcoes = window._currentItemOpcoes;
+  const op = opcoes[idx];
+
+  // Atualiza preço
+  document.getElementById('modal-preco').textContent = formatCurrency(op.preco);
+
+  // Atualiza pills
+  opcoes.forEach((_, i) => {
+    const pill = document.getElementById(`pill-${i}`);
+    if (!pill) return;
+    if (i === idx) {
+      pill.style.background = 'var(--ink)';
+      pill.style.color = '#fff';
+      pill.style.borderColor = 'var(--ink)';
+    } else {
+      pill.style.background = 'transparent';
+      pill.style.color = 'var(--muted)';
+      pill.style.borderColor = 'var(--border-dk)';
+    }
+  });
+
+  // Mostra/esconde campo texto livre
+  const textoLivre = document.getElementById('texto-livre-input');
+  if (textoLivre) {
+    textoLivre.style.display = op.texto_livre ? 'block' : 'none';
+  }
+}
+
+function adicionarDoModal(itemId) {
+  const item = cardapioItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  const opcoes = window._currentItemOpcoes;
+  const temVariacao = Array.isArray(opcoes) && opcoes.length > 0;
+
+  if (temVariacao) {
+    const idx = window._selectedOpcaoIdx || 0;
+    const op = opcoes[idx];
+    const textoLivre = document.getElementById('texto-livre-input')?.value.trim();
+    const nomeCompleto = textoLivre ? `${item.nome} — ${op.nome}: ${textoLivre}` : `${item.nome} — ${op.nome}`;
+    const preco = op.preco;
+
+    cart[`${itemId}_${idx}`] = {
+      item: { ...item, nome: nomeCompleto, preco },
+      qty: 1,
+      itemId
+    };
+  } else {
+    cart[itemId] = { item, qty: 1 };
+  }
+
+  document.getElementById('item-detail-modal')?.remove();
+  refreshItemCard(itemId);
+  updateCartUI();
+}
+
+    function filtrarCardapio(query) {
+  const q = query.trim().toLowerCase();
+  const sections = document.querySelectorAll('.category-section');
+
+  if (!q) {
+    sections.forEach(s => {
+      s.style.display = '';
+      s.querySelectorAll('.item-card').forEach(c => c.style.display = '');
+    });
+    return;
+  }
+
+  sections.forEach(section => {
+    let visíveis = 0;
+    section.querySelectorAll('.item-card').forEach(card => {
+      const nome = card.querySelector('.item-name')?.textContent.toLowerCase() || '';
+      const desc = card.querySelector('.item-desc')?.textContent.toLowerCase() || '';
+      if (nome.includes(q) || desc.includes(q)) {
+        card.style.display = '';
+        visíveis++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+    section.style.display = visíveis === 0 ? 'none' : '';
+    // Abre a categoria automaticamente se tem resultado
+    if (visíveis > 0 && !section.classList.contains('open')) {
+      section.classList.add('open');
+    }
+  });
 }
 
 function irParaFoto(index, total) {
