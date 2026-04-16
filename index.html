@@ -699,18 +699,17 @@ html { scroll-behavior: smooth; }
     function showSpotlight() {
       setTimeout(() => {
         // Apresenta search primeiro
-        const searchEl = document.getElementById('search-input');
+       const searchEl = document.getElementById('search-input');
         if (searchEl) {
-          const searchWrap = document.getElementById('search-wrap');
-          const rect = searchWrap.getBoundingClientRect();
+          const rect = searchEl.getBoundingClientRect();
           const overlay = document.getElementById('spotlight-overlay');
           const label = document.getElementById('spotlight-label');
           const hole = document.createElement('div');
           hole.className = 'spotlight-hole';
-          hole.style.left = (rect.left - 8) + 'px';
-          hole.style.top = (rect.top - 8) + 'px';
-          hole.style.width = (rect.width + 16) + 'px';
-          hole.style.height = (rect.height + 16) + 'px';
+           hole.style.left = (rect.left - 12) + 'px';
+          hole.style.top = (rect.top - 12) + 'px';
+          hole.style.width = (rect.width + 24) + 'px';
+           hole.style.height = (rect.height + 24) + 'px';
           overlay.appendChild(hole);
           label.innerHTML = `<span class="s-icon">🔍</span>Busque qualquer item aqui`;
           label.style.top = (rect.bottom + 24) + 'px';
