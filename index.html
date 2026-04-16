@@ -1003,7 +1003,6 @@ ordemCategorias.forEach(cat => {
       const item = cardapioItems.find(i => i.id === itemId);
       if (!item) return;
       cart[itemId] = { item, qty: 1 };
-      refreshItemCard(itemId);
       updateCartUI();
     }
 
