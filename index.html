@@ -1031,25 +1031,35 @@ ordemCategorias.forEach(cat => {
       document.getElementById('cart-total').textContent = formatCurrency(totalPrice);
     }
 
-    function renderCartBody() {
+  function renderCartBody() {
       const body  = document.getElementById('cart-body');
       const items = Object.values(cart);
       if (!items.length) {
         body.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>Seu carrinho está vazio</p></div>`;
         return;
       }
-      body.innerHTML = items.map(({item,qty}) => `
+      body.innerHTML = items.map(({item, qty}, idx) => {
+        const key = Object.keys(cart)[idx];
+        return `
         <div class="cart-item">
           <div class="cart-item-name">${escHtml(item.nome)}</div>
           <div class="cart-item-qty">
-            <button class="cart-qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
+            <button class="cart-qty-btn" onclick="changeCartQty('${key}',-1)">−</button>
             <span class="cart-qty-num">${qty}</span>
-            <button class="cart-qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+            <button class="cart-qty-btn" onclick="changeCartQty('${key}',1)">+</button>
           </div>
           <div class="cart-item-price">${formatCurrency(qty * parseFloat(item.preco||0))}</div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     }
 
+    function changeCartQty(key, delta) {
+      if (!cart[key]) return;
+      cart[key].qty += delta;
+      if (cart[key].qty <= 0) delete cart[key];
+      updateCartUI();
+    }
+    
     function openCart() {
       document.getElementById('cart-backdrop').classList.add('open');
       document.getElementById('cart-drawer').classList.add('open');
