@@ -696,36 +696,35 @@ html { scroll-behavior: smooth; }
     // ═══════════════════════════════
     // 🔦 SPOTLIGHT
     // ═══════════════════════════════
-    function showSpotlight() {
-      setTimeout(() => {
-        // Apresenta search primeiro
-       const searchEl = document.getElementById('search-input');
-        if (searchEl) {
-          const rect = searchEl.getBoundingClientRect();
-          const overlay = document.getElementById('spotlight-overlay');
-          const label = document.getElementById('spotlight-label');
-          const hole = document.createElement('div');
-          hole.className = 'spotlight-hole';
-           hole.style.left = (rect.left - 12) + 'px';
-          hole.style.top = (rect.top - 12) + 'px';
-          hole.style.width = (rect.width + 24) + 'px';
-           hole.style.height = (rect.height + 24) + 'px';
-          overlay.appendChild(hole);
-          label.innerHTML = `<span class="s-icon">🔍</span>Busque qualquer item aqui`;
-          label.style.top = (rect.bottom + 24) + 'px';
-          label.style.bottom = 'auto';
-          label.innerHTML = `<span class="s-icon">👆</span>Toque numa categoria para ver os itens`;
-        overlay.classList.remove('hidden');
-        label.classList.remove('hidden');
-        // Qualquer toque fora fecha
-          overlay.addEventListener('click', () => {
-            hole.remove();
-            showSpotlightCategoria();
-          }, { once: true });
-          return;
-        }
+     function showSpotlight() {
+  setTimeout(() => {
+    const searchEl = document.getElementById('search-input');
+    if (searchEl) {
+      const rect = searchEl.getBoundingClientRect();
+      const overlay = document.getElementById('spotlight-overlay');
+      const label = document.getElementById('spotlight-label');
+      const hole = document.createElement('div');
+      hole.className = 'spotlight-hole';
+      hole.style.left = (rect.left - 12) + 'px';
+      hole.style.top = (rect.top - 12) + 'px';
+      hole.style.width = (rect.width + 24) + 'px';
+      hole.style.height = (rect.height + 24) + 'px';
+      overlay.appendChild(hole);
+      label.innerHTML = `<span class="s-icon">🔍</span>Busque qualquer item aqui`;
+      label.style.top = (rect.bottom + 24) + 'px';
+      label.style.bottom = 'auto';
+      overlay.classList.remove('hidden');
+      label.classList.remove('hidden');
+      overlay.addEventListener('click', () => {
+        hole.remove();
+        overlay.classList.add('hidden');
+        label.classList.add('hidden');
         showSpotlightCategoria();
-    }, 500);
+      }, { once: true });
+      return;
+    }
+    showSpotlightCategoria();
+  }, 500);
 }
 
 function showSpotlightCategoria() {
