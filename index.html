@@ -1369,8 +1369,7 @@ function adicionarDoModal(itemId) {
     cart[itemId] = { item, qty: 1 };
   }
 
-  document.getElementById('item-detail-modal')?.remove();
-  refreshItemCard(itemId);
+ document.getElementById('item-detail-modal')?.remove();
   updateCartUI();
 }
 
