@@ -528,20 +528,26 @@ html { scroll-behavior: smooth; }
   </div>
 </header>
 
-  <div class="search-wrap" id="search-wrap" style="display:none;">
-    <div class="search-inner">
-      <div class="search-wrap-inner">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" id="search-input" placeholder="Buscar no cardápio..." oninput="filtrarCardapio(this.value)" />
-      </div>
-    </div>
-  </div>
+  <div class="search-wrap" id="search-wrap" style="display:none;"></div>
 
   <div class="cat-nav-wrap" id="cat-nav-wrap" style="display:none;">
     <div class="cat-nav" id="cat-nav"></div>
   </div>
 
   <main class="main">
+    <div id="search-inline" style="display:none; margin-bottom:20px;">
+    <div style="position:relative;">
+      <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:14px; opacity:0.4; pointer-events:none;">🔍</span>
+      <input style="
+        width:100%; padding:10px 16px 10px 38px;
+        border-radius:999px; border:1px solid var(--border);
+        background:var(--white); color:var(--ink);
+        font-family:'Outfit',sans-serif; font-size:13.5px;
+        outline:none; transition:border-color 0.2s ease;
+      " placeholder="Buscar no cardápio..." oninput="filtrarCardapio(this.value)" id="search-input" />
+    </div>
+  </div>
+    
     <div class="state-box" id="loading-state">
       <div class="spinner"></div>
       <p>Carregando cardápio...</p>
@@ -886,7 +892,7 @@ async function loadRestaurant() {
     function renderCardapio() {
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('cardapio-content').style.display = 'block';
-      document.getElementById('search-wrap').style.display = 'block';
+      document.getElementById('search-inline').style.display = 'block';
 
       const categorias = {};
 const ordemCategorias = [];
