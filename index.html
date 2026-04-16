@@ -1123,7 +1123,8 @@ ordemCategorias.forEach(cat => {
             itens, total_price: total,
             service_type: 'local',
             origin: 'autoatendimento',
-            notes: mesaNum ? `Mesa ${mesaNum}${notes ? ` — ${notes}` : ''}` : notes
+            table_number: mesaNum || null,
+            notes: notes || null
           })
         });
         const data = await resp.json();
@@ -1136,7 +1137,7 @@ ordemCategorias.forEach(cat => {
         btn.textContent = 'Fazer pedido';
       }
     }
-
+    
     function showSuccess(orderNum) {
       document.getElementById('success-order-num').textContent = orderNum ? `Pedido #${orderNum}` : 'Pedido confirmado';
       document.getElementById('success-screen').classList.add('open');
