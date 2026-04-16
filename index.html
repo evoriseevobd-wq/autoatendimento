@@ -511,6 +511,8 @@ html { scroll-behavior: smooth; }
 </head>
 <body>
 
+  <div class="bg-glow" id="bg-glow"></div>
+  
   <header class="header">
   <div class="header-inner">
     <div class="header-text">
@@ -863,7 +865,11 @@ async function loadRestaurant() {
       document.documentElement.style.setProperty('--cream2',    '#2a2420');
     }
 
-    if (cfg.cor_primaria) document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
+    if (cfg.cor_primaria) {
+      document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
+      const glow = document.getElementById('bg-glow');
+      if (glow) glow.style.background = `radial-gradient(ellipse, ${cfg.cor_primaria}18 0%, transparent 70%)`;
+    }
     if (cfg.cor_fundo) {
       document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
       document.body.style.background = cfg.cor_fundo;
