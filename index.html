@@ -714,8 +714,10 @@ html { scroll-behavior: smooth; }
           label.innerHTML = `<span class="s-icon">🔍</span>Busque qualquer item aqui`;
           label.style.top = (rect.bottom + 24) + 'px';
           label.style.bottom = 'auto';
-          overlay.classList.remove('hidden');
-          label.classList.remove('hidden');
+          label.innerHTML = `<span class="s-icon">👆</span>Toque numa categoria para ver os itens`;
+        overlay.classList.remove('hidden');
+        label.classList.remove('hidden');
+        // Qualquer toque fora fecha
           overlay.addEventListener('click', () => {
             hole.remove();
             showSpotlightCategoria();
