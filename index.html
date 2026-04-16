@@ -842,21 +842,7 @@ async function loadRestaurant() {
       document.getElementById('logo-wrap').classList.add('visible');
     }
 
-   if (cfg.cor_primaria) {
-      document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
-    }
-
-    // cor_secundaria vai para outra variável — não sobrescreve --amber
-    if (cfg.cor_secundaria) {
-      document.documentElement.style.setProperty('--ink2', cfg.cor_secundaria);
-    }
-    
-    if (cfg.cor_fundo) {
-      document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
-      document.body.style.background = cfg.cor_fundo;
-    }
-
-    const tema = cfg.tema || 'dark';
+   const tema = cfg.tema || 'dark';
     console.log('🎨 Tema:', tema);
 
     if (tema === 'light') {
@@ -875,6 +861,12 @@ async function loadRestaurant() {
       document.documentElement.style.setProperty('--border-dk', 'rgba(255,255,255,0.18)');
       document.documentElement.style.setProperty('--white',     '#1a1814');
       document.documentElement.style.setProperty('--cream2',    '#2a2420');
+    }
+
+    if (cfg.cor_primaria) document.documentElement.style.setProperty('--amber', cfg.cor_primaria);
+    if (cfg.cor_fundo) {
+      document.documentElement.style.setProperty('--cream', cfg.cor_fundo);
+      document.body.style.background = cfg.cor_fundo;
     }
 
   } catch(err) {
