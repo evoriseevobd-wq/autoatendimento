@@ -1366,8 +1366,15 @@ function adicionarDoModal(itemId) {
   if (temVariacao) {
     const idx = window._selectedOpcaoIdx || 0;
     const op = opcoes[idx];
-    const textoLivre = document.getElementById('texto-livre-input')?.value.trim();
-    const nomeCompleto = textoLivre ? `${item.nome} — ${op.nome}: ${textoLivre}` : `${item.nome} — ${op.nome}`;
+    const checkboxes = document.querySelectorAll('#checkboxes-sabores input[type="checkbox"]:checked');
+const saboresSelecionados = [...checkboxes].map(c => c.value);
+if (op.texto_livre && saboresSelecionados.length !== 2) {
+  document.getElementById('sabores-aviso').style.display = 'block';
+  return;
+}
+const nomeCompleto = op.texto_livre 
+  ? `${item.nome} — ${saboresSelecionados.join(' + ')}`
+  : `${item.nome} — ${op.nome}`;
     const preco = op.preco;
 
     cart[`${itemId}_${idx}`] = {
