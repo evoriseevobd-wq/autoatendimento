@@ -1368,6 +1368,17 @@ function getFotos(item) {
   }
 }
 
+function onSaborChange(cb) {
+  const todos = document.querySelectorAll('#checkboxes-sabores input[type="checkbox"]');
+  const marcados = [...todos].filter(c => c.checked);
+  if (marcados.length > 2) {
+    cb.checked = false;
+    return;
+  }
+  const aviso = document.getElementById('sabores-aviso');
+  if (aviso) aviso.style.display = marcados.length === 2 ? 'none' : 'block';
+}
+    
 function adicionarDoModal(itemId) {
   const item = cardapioItems.find(i => i.id === itemId);
   if (!item) return;
@@ -1381,7 +1392,8 @@ function adicionarDoModal(itemId) {
     const checkboxes = document.querySelectorAll('#checkboxes-sabores input[type="checkbox"]:checked');
 const saboresSelecionados = [...checkboxes].map(c => c.value);
 if (op.texto_livre && saboresSelecionados.length !== 2) {
-  document.getElementById('sabores-aviso').style.display = 'block';
+  const aviso = document.getElementById('sabores-aviso');
+if (aviso) aviso.style.display = 'block';
   return;
 }
 const nomeCompleto = op.texto_livre 
