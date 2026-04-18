@@ -1436,7 +1436,18 @@ let precoFinal = op.preco;
 if (op.texto_livre && saboresSelecionados.length === 2 && (!op.preco || op.preco === 0)) {
   const precos = saboresSelecionados.map(nome => {
     const itemEncontrado = cardapioItems.find(i => i.nome === nome);
-    return itemEncontrado ? parseFloat(itemEncontrado.preco) : 0;
+    if (!itemEncontrado) return 0;
+    // Busca o preço da variação que bate com o filtro
+    const filtro = op.filtro || "";
+    if (filtro && Array.isArray(itemEncontrado.opcoes)) {
+      const variacaoMatch = itemEncontrado.opcoes.find(v =>
+        String(v.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+          filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        )
+      );
+      if (variacaoMatch) return parseFloat(variacaoMatch.preco) || 0;
+    }
+    return parseFloat(itemEncontrado.preco) || 0;
   });
   precoFinal = Math.max(...precos);
 }
