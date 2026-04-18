@@ -1280,7 +1280,15 @@ function openItemDetailModal(item) {
   <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha 2 sabores</div>
   <div id="checkboxes-sabores" style="display:flex; flex-direction:column; gap:8px;">
     ${cardapioItems
-      .filter(i => i.categoria === item.categoria && i.id !== item.id && i.ativo)
+  .filter(i => {
+    if (i.id === item.id || !i.ativo) return false;
+    if (i.categoria !== item.categoria) return false;
+    const filtro = opcoes[0]?.filtro || "";
+    if (!filtro) return true;
+    return i.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+      filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    );
+  })
       .map(s => `
         <label style="display:flex; align-items:center; gap:10px; padding:10px 14px;
           border:1.5px solid var(--border-dk); border-radius:10px; cursor:pointer;">
@@ -1396,10 +1404,20 @@ if (op.texto_livre && saboresSelecionados.length !== 2) {
 if (aviso) aviso.style.display = 'block';
   return;
 }
+    
 const nomeCompleto = op.texto_livre 
   ? `${item.nome} — ${saboresSelecionados.join(' + ')}`
   : `${item.nome} — ${op.nome}`;
-    const preco = op.preco;
+
+let precoFinal = op.preco;
+if (op.texto_livre && saboresSelecionados.length === 2 && (!op.preco || op.preco === 0)) {
+  const precos = saboresSelecionados.map(nome => {
+    const itemEncontrado = cardapioItems.find(i => i.nome === nome);
+    return itemEncontrado ? parseFloat(itemEncontrado.preco) : 0;
+  });
+  precoFinal = Math.max(...precos);
+}
+const preco = precoFinal;
 
     cart[`${itemId}_${idx}`] = {
       item: { ...item, nome: nomeCompleto, preco },
