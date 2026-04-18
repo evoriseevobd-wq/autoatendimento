@@ -1367,14 +1367,22 @@ function getFotos(item) {
       container.style.display = 'block';
       const filtro = op.filtro || "";
       const itensFiltrados = cardapioItems.filter(i => {
-        if (i.id === window._currentItemId || !i.ativo) return false;
-        const itemAtual = cardapioItems.find(x => x.id === window._currentItemId);
-        if (i.categoria !== itemAtual?.categoria) return false;
-        if (!filtro) return true;
-        return i.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
-          filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        );
-      });
+  if (i.id === window._currentItemId || !i.ativo) return false;
+  const itemAtual = cardapioItems.find(x => x.id === window._currentItemId);
+  if (i.categoria !== itemAtual?.categoria) return false;
+  if (!filtro) return true;
+  // Busca no nome do item
+  const nomeMatch = i.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+    filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  );
+  // Busca nas variações do item
+  const variacaoMatch = Array.isArray(i.opcoes) && i.opcoes.some(op =>
+    String(op.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+      filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    )
+  );
+  return nomeMatch || variacaoMatch;
+});
       checkboxesDiv.innerHTML = itensFiltrados.map(s => `
         <label style="display:flex; align-items:center; gap:10px; padding:10px 14px;
           border:1.5px solid var(--border-dk); border-radius:10px; cursor:pointer;">
