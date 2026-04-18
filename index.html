@@ -1258,45 +1258,32 @@ function openItemDetailModal(item) {
           </p>
           ` : ''}
 
-          ${temVariacao ? `
-          <div>
-            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha uma opção</div>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;" id="opcoes-pills">
-              ${opcoes.map((op, idx) => `
-                <button onclick="selecionarOpcao(${idx})" id="pill-${idx}" style="
-                  padding:7px 16px; border-radius:999px; cursor:pointer;
-                  font-family:'Outfit',sans-serif; font-size:13px; font-weight:600;
-                  transition:all 0.18s ease;
-                  ${idx === 0
-                    ? 'background:var(--ink); color:#fff; border:1.5px solid var(--ink);'
-                    : 'background:transparent; color:var(--muted); border:1.5px solid var(--border-dk);'}
-                ">
-                  ${escHtml(op.nome)} — ${formatCurrency(op.preco)}
-                </button>
-              `).join('')}
-            </div>
-            ${opcoes.some(op => op.texto_livre) ? `
-<div id="sabores-container" style="margin-top:12px; display:none;">
-  <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha 2 sabores</div>
-  <div id="checkboxes-sabores" style="display:flex; flex-direction:column; gap:8px;">
+       ${temVariacao ? `
+<div>
+  <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha uma opção</div>
+  <div style="display:flex; flex-wrap:wrap; gap:8px;" id="opcoes-pills">
+    ${opcoes.map((op, idx) => `
+      <button onclick="selecionarOpcao(${idx})" id="pill-${idx}" style="
+        padding:7px 16px; border-radius:999px; cursor:pointer;
+        font-family:'Outfit',sans-serif; font-size:13px; font-weight:600;
+        transition:all 0.18s ease;
+        ${idx === 0
+          ? 'background:var(--ink); color:#fff; border:1.5px solid var(--ink);'
+          : 'background:transparent; color:var(--muted); border:1.5px solid var(--border-dk);'}
+      ">
+        ${escHtml(op.nome)} — ${formatCurrency(op.preco)}
+      </button>
+    `).join('')}
   </div>
-  <div id="sabores-aviso" style="margin-top:8px; font-size:12px; color:var(--amber); display:none;">Selecione exatamente 2 sabores</div>
-</div>
-      .map(s => `
-        <label style="display:flex; align-items:center; gap:10px; padding:10px 14px;
-          border:1.5px solid var(--border-dk); border-radius:10px; cursor:pointer;">
-          <input type="checkbox" value="${escHtml(s.nome)}"
-            onchange="onSaborChange(this)"
-            style="width:18px; height:18px; accent-color:var(--amber); cursor:pointer;" />
-          <span style="font-size:14px; font-weight:500; color:var(--ink);">${escHtml(s.nome)}</span>
-        </label>
-      `).join('')}
+  ${opcoes.some(op => op.texto_livre) ? `
+  <div id="sabores-container" style="margin-top:12px; display:none;">
+    <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha 2 sabores</div>
+    <div id="checkboxes-sabores" style="display:flex; flex-direction:column; gap:8px;"></div>
+    <div id="sabores-aviso" style="margin-top:8px; font-size:12px; color:var(--amber); display:none;">Selecione exatamente 2 sabores</div>
   </div>
-  <div id="sabores-aviso" style="margin-top:8px; font-size:12px; color:var(--amber); display:none;">Selecione exatamente 2 sabores</div>
+  ` : ''}
 </div>
 ` : ''}
-          </div>
-          ` : ''}
 
           <div style="display:flex; gap:10px; margin-top:4px;">
             <button onclick="document.getElementById('item-detail-modal').remove()" style="
