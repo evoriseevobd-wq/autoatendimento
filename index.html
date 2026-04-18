@@ -1275,20 +1275,13 @@ function openItemDetailModal(item) {
                 </button>
               `).join('')}
             </div>
-            ${opcoes[0]?.texto_livre ? `
-<div style="margin-top:12px;">
+            ${opcoes.some(op => op.texto_livre) ? `
+<div style="margin-top:12px;" id="sabores-container" style="display:none;">
   <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Escolha 2 sabores</div>
   <div id="checkboxes-sabores" style="display:flex; flex-direction:column; gap:8px;">
-    ${cardapioItems
-  .filter(i => {
-    if (i.id === item.id || !i.ativo) return false;
-    if (i.categoria !== item.categoria) return false;
-    const filtro = opcoes[0]?.filtro || "";
-    if (!filtro) return true;
-    return i.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
-      filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    );
-  })
+  </div>
+  <div id="sabores-aviso" style="margin-top:8px; font-size:12px; color:var(--amber); display:none;">Selecione exatamente 2 sabores</div>
+</div>
       .map(s => `
         <label style="display:flex; align-items:center; gap:10px; padding:10px 14px;
           border:1.5px solid var(--border-dk); border-radius:10px; cursor:pointer;">
@@ -1346,7 +1339,7 @@ function getFotos(item) {
   }
 }
 
-    function selecionarOpcao(idx) {
+   function selecionarOpcao(idx) {
   window._selectedOpcaoIdx = idx;
   const opcoes = window._currentItemOpcoes;
   const op = opcoes[idx];
@@ -1373,6 +1366,37 @@ function getFotos(item) {
   const textoLivre = document.getElementById('texto-livre-input');
   if (textoLivre) {
     textoLivre.style.display = op.texto_livre ? 'block' : 'none';
+  }
+
+  // Atualiza checkboxes se for texto_livre
+  const container = document.getElementById('sabores-container');
+  const checkboxesDiv = document.getElementById('checkboxes-sabores');
+  if (container && checkboxesDiv) {
+    if (op.texto_livre) {
+      container.style.display = 'block';
+      const filtro = op.filtro || "";
+      const itensFiltrados = cardapioItems.filter(i => {
+        if (i.id === window._currentItemId || !i.ativo) return false;
+        const itemAtual = cardapioItems.find(x => x.id === window._currentItemId);
+        if (i.categoria !== itemAtual?.categoria) return false;
+        if (!filtro) return true;
+        return i.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+          filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        );
+      });
+      checkboxesDiv.innerHTML = itensFiltrados.map(s => `
+        <label style="display:flex; align-items:center; gap:10px; padding:10px 14px;
+          border:1.5px solid var(--border-dk); border-radius:10px; cursor:pointer;">
+          <input type="checkbox" value="${escHtml(s.nome)}"
+            onchange="onSaborChange(this)"
+            style="width:18px; height:18px; accent-color:var(--amber); cursor:pointer;" />
+          <span style="font-size:14px; font-weight:500; color:var(--ink);">${escHtml(s.nome)}</span>
+        </label>
+      `).join('');
+    } else {
+      container.style.display = 'none';
+      checkboxesDiv.innerHTML = '';
+    }
   }
 }
 
