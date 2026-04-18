@@ -1461,7 +1461,7 @@ function adicionarDoModal(itemId) {
     }
 
 const nomeCompleto = op.texto_livre
-  ? `${item.nome} ${op.nome} — ${saboresSelecionados.join(' + ')}`
+  ? `${item.nome}${item.nome.toLowerCase().includes(op.nome.toLowerCase()) ? '' : ' ' + op.nome} — ${saboresSelecionados.join(' + ')}`
   : `${item.nome} — ${op.nome}`;
 
     let precoFinal = op.preco;
