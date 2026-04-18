@@ -1311,6 +1311,10 @@ function openItemDetailModal(item) {
   window._currentItemOpcoes = opcoes;
   window._currentItemId = item.id;
 
+if (opcoes.length > 0) {
+  setTimeout(() => selecionarOpcao(0), 50);
+}
+  
   document.body.appendChild(modal);
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 }
