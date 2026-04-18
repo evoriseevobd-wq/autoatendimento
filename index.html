@@ -1410,29 +1410,33 @@ function onSaborChange(cb) {
   if (aviso) aviso.style.display = marcados.length === 2 ? 'none' : 'block';
 
   // Atualiza preço em tempo real
-  if (marcados.length === 2) {
-    const opcoes = window._currentItemOpcoes;
-    const op = opcoes[window._selectedOpcaoIdx || 0];
-    if (op.texto_livre && (!op.preco || op.preco === 0)) {
-      const sabores = marcados.map(c => c.value);
-      const precos = sabores.map(nome => {
-        const itemEncontrado = cardapioItems.find(i => i.nome === nome);
-        if (!itemEncontrado) return 0;
-        const filtro = op.filtro || "";
-        if (filtro && Array.isArray(itemEncontrado.opcoes)) {
-          const variacaoMatch = itemEncontrado.opcoes.find(v =>
-            String(v.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
-              filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            )
-          );
-          if (variacaoMatch) return parseFloat(variacaoMatch.preco) || 0;
-        }
-        return parseFloat(itemEncontrado.preco) || 0;
-      });
-      const maiorPreco = Math.max(...precos);
-      const precoEl = document.getElementById('modal-preco');
-      if (precoEl) precoEl.textContent = formatCurrency(maiorPreco);
-    }
+const opcoes = window._currentItemOpcoes;
+const op = opcoes[window._selectedOpcaoIdx || 0];
+const precoEl = document.getElementById('modal-preco');
+const itemAtual = cardapioItems.find(x => x.id === window._currentItemId);
+
+if (op.texto_livre && (!op.preco || op.preco === 0)) {
+  if (marcados.length === 0) {
+    // Sem seleção — preço base
+    if (precoEl) precoEl.textContent = formatCurrency(itemAtual?.preco || 0);
+  } else {
+    // 1 ou 2 selecionados — maior preço entre os selecionados
+    const sabores = marcados.map(c => c.value);
+    const precos = sabores.map(nome => {
+      const itemEncontrado = cardapioItems.find(i => i.nome === nome);
+      if (!itemEncontrado) return 0;
+      const filtro = op.filtro || "";
+      if (filtro && Array.isArray(itemEncontrado.opcoes)) {
+        const variacaoMatch = itemEncontrado.opcoes.find(v =>
+          String(v.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(
+            filtro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          )
+        );
+        if (variacaoMatch) return parseFloat(variacaoMatch.preco) || 0;
+      }
+      return parseFloat(itemEncontrado.preco) || 0;
+    });
+    if (precoEl) precoEl.textContent = formatCurrency(Math.max(...precos));
   }
 }
 
