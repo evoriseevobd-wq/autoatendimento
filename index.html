@@ -1460,9 +1460,9 @@ function adicionarDoModal(itemId) {
       return;
     }
 
-    const nomeCompleto = op.texto_livre
-      ? `${item.nome} — ${saboresSelecionados.join(' + ')}`
-      : `${item.nome} — ${op.nome}`;
+const nomeCompleto = op.texto_livre
+  ? `${item.nome} ${op.nome} — ${saboresSelecionados.join(' + ')}`
+  : `${item.nome} — ${op.nome}`;
 
     let precoFinal = op.preco;
     if (op.texto_livre && saboresSelecionados.length === 2 && (!op.preco || op.preco === 0)) {
