@@ -786,7 +786,7 @@ function showSpotlightCategoria() {
     // ═══════════════════════════════
     // INIT
     // ═══════════════════════════════
-   async function init() {
+  async function init() {
   const params = new URLSearchParams(window.location.search);
   mesaNum = params.get('mesa') || null;
 
@@ -803,31 +803,107 @@ function showSpotlightCategoria() {
 
   try {
     const dominio = window.location.hostname;
-    console.log('🌐 Domínio detectado:', dominio);
-    console.log('🔗 API_BASE:', API_BASE);
-
     const resp = await fetch(`${API_BASE}/api/v1/dominio-cardapio/${dominio}`);
-    console.log('📡 Status dominio-cardapio:', resp.status);
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error('❌ Erro dominio-cardapio:', errText);
-      throw new Error('dominio');
-    }
-
+    if (!resp.ok) throw new Error('dominio');
     const data = await resp.json();
-    console.log('✅ restaurant_id:', data.restaurant_id);
     restaurantId = data.restaurant_id;
 
     await loadRestaurant();
     await loadCardapio();
 
+    // ✅ Se tiver mesa, busca pedido aberto
+    if (mesaNum && restaurantId) {
+      await verificarMesaAberta();
+    }
+
   } catch (e) {
-    console.error('❌ Erro no init:', e);
     showError('Cardápio não encontrado. Verifique o link.');
   }
 }
 
+async function verificarMesaAberta() {
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/pedidos-mesa?restaurant_id=${restaurantId}&mesa=${mesaNum}`);
+    const data = await resp.json();
+
+    if (!data.pedido) return; // mesa livre, fluxo normal
+
+    pedidoAbertoMesa = data.pedido;
+
+    // Mostra tela de aviso
+    const nomeCliente = data.pedido.client_name || 'alguém';
+    showMesaOcupada(nomeCliente);
+  } catch (e) {
+    // Se falhar, deixa fluxo normal
+  }
+}
+
+function showMesaOcupada(nomeCliente) {
+  const el = document.createElement('div');
+  el.id = 'mesa-ocupada-screen';
+  el.style.cssText = `
+    position:fixed; inset:0; background:var(--cream);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:20px; padding:40px; text-align:center; z-index:9999;
+  `;
+  el.innerHTML = `
+    <div style="font-size:52px">🍽️</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--ink)">
+      Mesa ${mesaNum} em uso
+    </div>
+    <p style="font-size:14px;color:var(--muted);max-width:280px;line-height:1.65;font-weight:300">
+      ${nomeCliente} já tem um pedido aberto nessa mesa.<br>Deseja adicionar mais itens?
+    </p>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;">
+      <button onclick="continuarPedido()" style="
+        padding:15px; border-radius:var(--radius-sm); border:none;
+        background:var(--ink); color:#fff;
+        font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
+        cursor:pointer;">
+        ✅ Sim, adicionar itens
+      </button>
+      <button onclick="bloquearMesa()" style="
+        padding:15px; border-radius:var(--radius-sm);
+        border:1.5px solid var(--border-dk); background:transparent;
+        font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
+        color:var(--muted); cursor:pointer;">
+        ❌ Não, ir ao caixa
+      </button>
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+
+function continuarPedido() {
+  document.getElementById('mesa-ocupada-screen')?.remove();
+  // Cardápio já está carregado, só deixa o cliente adicionar
+}
+
+function bloquearMesa() {
+  document.getElementById('mesa-ocupada-screen')?.remove();
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed; inset:0; background:var(--cream);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:16px; padding:40px; text-align:center; z-index:9999;
+  `;
+  el.innerHTML = `
+    <div style="font-size:52px">🧾</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--ink)">
+      Dirija-se ao caixa
+    </div>
+    <p style="font-size:14px;color:var(--muted);max-width:260px;line-height:1.65;font-weight:300">
+      Apresente esta mesa ao atendente para finalizar seu pedido.
+    </p>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--ink)">
+      Mesa ${mesaNum}
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+    
 async function loadRestaurant() {
   try {
     console.log('🔧 Buscando config para:', restaurantId);
@@ -1096,47 +1172,72 @@ ordemCategorias.forEach(cat => {
     }
 
     async function submitOrder() {
-      const name  = document.getElementById('input-name').value.trim();
-      const phone = document.getElementById('input-phone').value.trim();
-      const notes = document.getElementById('input-notes').value.trim();
-      if (!name) { alert('Por favor, informe seu nome.'); document.getElementById('input-name').focus(); return; }
+  const name  = document.getElementById('input-name').value.trim();
+  const phone = document.getElementById('input-phone').value.trim();
+  const notes = document.getElementById('input-notes').value.trim();
+  if (!name) { alert('Por favor, informe seu nome.'); document.getElementById('input-name').focus(); return; }
 
-      const items = Object.values(cart);
-      const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
-      const itens = items.map(({item,qty}) => ({
-        name: item.nome, qty, quantidade: qty,
-        price: parseFloat(item.preco||0), preco: parseFloat(item.preco||0)
-      }));
+  const items = Object.values(cart);
+  const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
+  const itens = items.map(({item,qty}) => ({
+    name: item.nome, qty, quantidade: qty,
+    price: parseFloat(item.preco||0), preco: parseFloat(item.preco||0)
+  }));
 
-      const btn = document.getElementById('confirm-btn');
-      btn.disabled = true;
-      btn.textContent = 'Enviando...';
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
 
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/pedidos`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            restaurant_id: restaurantId,
-            client_name: name,
-            client_phone: phone || null,
-            itens, total_price: total,
-            service_type: 'local',
-            origin: 'autoatendimento',
-            table_number: mesaNum || null,
-            notes: notes || null
-          })
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Erro ao criar pedido');
-        closeCheckout();
-        showSuccess(data.order?.order_number);
-      } catch(e) {
-        alert('Erro ao enviar pedido.\n' + e.message);
-        btn.disabled = false;
-        btn.textContent = 'Fazer pedido';
-      }
+  try {
+    let orderNum;
+
+    if (pedidoAbertoMesa) {
+      // ✅ Adiciona ao pedido existente
+      const resp = await fetch(`${API_BASE}/api/v1/pedidos/${pedidoAbertoMesa.id}/adicionar-itens`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itens_novos: itens,
+          total_adicional: total,
+          client_name: name,
+          client_phone: phone || null,
+          notes: notes || null  
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erro ao adicionar itens');
+      orderNum = data.order?.order_number;
+    } else {
+      // Cria pedido novo normalmente
+      const resp = await fetch(`${API_BASE}/api/v1/pedidos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurant_id: restaurantId,
+          client_name: name,
+          client_phone: phone || null,
+          itens, total_price: total,
+          service_type: 'local',
+          origin: 'autoatendimento',
+          table_number: mesaNum || null,
+          notes: notes || null
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erro ao criar pedido');
+      orderNum = data.order?.order_number;
+      // Guarda o pedido criado para próximas adições na mesma sessão
+      if (data.order) pedidoAbertoMesa = data.order;
     }
+
+    closeCheckout();
+    showSuccess(orderNum);
+  } catch(e) {
+    alert('Erro ao enviar pedido.\n' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Fazer pedido';
+  }
+}
     
     function showSuccess(orderNum) {
       document.getElementById('success-order-num').textContent = orderNum ? `Pedido #${orderNum}` : 'Pedido confirmado';
