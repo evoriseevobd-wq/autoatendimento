@@ -1145,31 +1145,57 @@ ordemCategorias.forEach(cat => {
       document.getElementById('cart-drawer').classList.remove('open');
     }
 
-    function openCheckout() {
-      closeCart();
-      const warning = document.getElementById('mesa-warning');
-      document.getElementById('mesa-warning-text').textContent = mesaNum ? `Seu pedido será feito na Mesa ${mesaNum}.` : '';
-      warning.style.display = mesaNum ? 'flex' : 'none';
+   function openCheckout() {
+  closeCart();
+  const warning = document.getElementById('mesa-warning');
+  document.getElementById('mesa-warning-text').textContent = mesaNum ? `Seu pedido será feito na Mesa ${mesaNum}.` : '';
+  warning.style.display = mesaNum ? 'flex' : 'none';
 
-      const items = Object.values(cart);
-      const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
-      document.getElementById('checkout-summary').innerHTML = `
-        <div class="order-summary-title">Resumo do pedido</div>
-        ${items.map(({item,qty}) => `
-          <div class="order-summary-item">
-            <span>${qty}× ${escHtml(item.nome)}</span>
-            <span>${formatCurrency(qty * parseFloat(item.preco||0))}</span>
-          </div>`).join('')}
-        <div class="order-summary-total">
-          <span>Total</span><span>${formatCurrency(total)}</span>
-        </div>`;
-      document.getElementById('checkout-backdrop').classList.add('open');
-      document.getElementById('checkout-modal').classList.add('open');
-    }
-    function closeCheckout() {
-      document.getElementById('checkout-backdrop').classList.remove('open');
-      document.getElementById('checkout-modal').classList.remove('open');
-    }
+  const items = Object.values(cart);
+  const totalNovo = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
+
+  // Preenche nome e telefone automaticamente se já tem pedido aberto
+  if (pedidoAbertoMesa) {
+    const inputName = document.getElementById('input-name');
+    const inputPhone = document.getElementById('input-phone');
+    if (pedidoAbertoMesa.client_name && !inputName.value) inputName.value = pedidoAbertoMesa.client_name;
+    if (pedidoAbertoMesa.client_phone && !inputPhone.value) inputPhone.value = pedidoAbertoMesa.client_phone;
+  }
+
+  const itensJaPedidos = pedidoAbertoMesa && Array.isArray(pedidoAbertoMesa.itens) ? pedidoAbertoMesa.itens : [];
+  const totalJaPedido = itensJaPedidos.reduce((s,i) => s + (parseFloat(i.price||i.preco||0) * (i.qty||i.quantidade||1)), 0);
+  const totalGeral = totalJaPedido + totalNovo;
+
+  document.getElementById('checkout-summary').innerHTML = `
+    ${itensJaPedidos.length > 0 ? `
+    <div class="order-summary-title" style="color:var(--muted);">Já pedido</div>
+    ${itensJaPedidos.map(i => `
+      <div class="order-summary-item" style="opacity:0.5;">
+        <span>${i.qty||i.quantidade||1}× ${escHtml(i.name||i.nome||'')}</span>
+        <span>${formatCurrency((i.qty||i.quantidade||1) * parseFloat(i.price||i.preco||0))}</span>
+      </div>`).join('')}
+    <div class="order-summary-item" style="opacity:0.5; padding-top:6px; border-top:1px solid var(--border);">
+      <span style="font-size:12px;">Subtotal já pedido</span>
+      <span>${formatCurrency(totalJaPedido)}</span>
+    </div>
+    <div style="margin:10px 0; border-top:1px dashed var(--border-dk);"></div>
+    <div class="order-summary-title">Adicionando agora</div>
+    ` : `
+    <div class="order-summary-title">Resumo do pedido</div>
+    `}
+    ${items.map(({item,qty}) => `
+      <div class="order-summary-item">
+        <span>${qty}× ${escHtml(item.nome)}</span>
+        <span>${formatCurrency(qty * parseFloat(item.preco||0))}</span>
+      </div>`).join('')}
+    <div class="order-summary-total">
+      <span>Total${itensJaPedidos.length > 0 ? ' geral' : ''}</span>
+      <span>${formatCurrency(totalGeral)}</span>
+    </div>`;
+
+  document.getElementById('checkout-backdrop').classList.add('open');
+  document.getElementById('checkout-modal').classList.add('open');
+}
 
     async function submitOrder() {
   const name  = document.getElementById('input-name').value.trim();
