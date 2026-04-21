@@ -1173,7 +1173,7 @@ async function submitOrder() {
       try {
         let resp, data;
         if (modoAdicao && pedidoAtivo) {
-          resp = await fetch(${API_BASE}/api/v1/pedidos/${pedidoAtivo.id}/adicionar-itens, {
+          resp = await fetch(`${API_BASE}/api/v1/pedidos/${pedidoAtivo.id}/adicionar-itens`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1189,7 +1189,7 @@ async function submitOrder() {
           closeCheckout();
           showSuccess(data.order?.order_number);
         } else {
-          resp = await fetch(${API_BASE}/api/v1/pedidos, {
+          resp = await fetch(`${API_BASE}/api/v1/pedidos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
