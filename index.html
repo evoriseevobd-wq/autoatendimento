@@ -1226,21 +1226,8 @@ async function submitOrder() {
     }
 
     function resetAll() {
-      cart = {};
-      tutorialDone = false;
-      pedidoAtivo = null;
-      modoAdicao = false; 
-      localStorage.setItem(SESSION_KEY, Date.now().toString()); // reinicia os 2h
-      document.getElementById('success-screen').classList.remove('open');
-      document.getElementById('input-name').value = '';
-      document.getElementById('input-phone').value = '';
-      document.getElementById('input-notes').value = '';
-      const toast = document.getElementById('toast-card');
-      toast.classList.remove('show');
-      updateCartUI();
-      renderCardapio();
-      showSpotlight();
-    }
+  window.location.reload();
+}
 
     function showError(msg) {
       document.getElementById('loading-state').style.display = 'none';
