@@ -1067,6 +1067,10 @@ ordemCategorias.forEach(cat => {
       document.getElementById('cart-drawer').classList.add('open');
       renderCartBody();
     }
+    function closeCheckout() {
+  document.getElementById('checkout-backdrop').classList.remove('open');
+  document.getElementById('checkout-modal').classList.remove('open');
+}
     function closeCart() {
       document.getElementById('cart-backdrop').classList.remove('open');
       document.getElementById('cart-drawer').classList.remove('open');
