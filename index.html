@@ -641,7 +641,9 @@ html { scroll-behavior: smooth; }
     let mesaNum = null;
     let cardapioItems = [];
     let cart = {};
-    let tutorialDone = false;
+   let tutorialDone = false;
+let pedidoAtivo = null;
+let modoAdicao = false;
 
     // ═══════════════════════════════
     // ⏱ SESSÃO 2 HORAS
@@ -821,6 +823,7 @@ function showSpotlightCategoria() {
 
     await loadRestaurant();
     await loadCardapio();
+    await checkPedidoAtivo();
 
   } catch (e) {
     console.error('❌ Erro no init:', e);
@@ -1069,68 +1072,143 @@ ordemCategorias.forEach(cat => {
       document.getElementById('cart-drawer').classList.remove('open');
     }
 
-    function openCheckout() {
+   function openCheckout() {
       closeCart();
       const warning = document.getElementById('mesa-warning');
       document.getElementById('mesa-warning-text').textContent = mesaNum ? `Seu pedido será feito na Mesa ${mesaNum}.` : '';
       warning.style.display = mesaNum ? 'flex' : 'none';
 
-      const items = Object.values(cart);
-      const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
-      document.getElementById('checkout-summary').innerHTML = `
-        <div class="order-summary-title">Resumo do pedido</div>
-        ${items.map(({item,qty}) => `
-          <div class="order-summary-item">
-            <span>${qty}× ${escHtml(item.nome)}</span>
-            <span>${formatCurrency(qty * parseFloat(item.preco||0))}</span>
-          </div>`).join('')}
-        <div class="order-summary-total">
-          <span>Total</span><span>${formatCurrency(total)}</span>
-        </div>`;
+      const newItems = Object.values(cart);
+      const newTotal = newItems.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
+
+      if (modoAdicao && pedidoAtivo) {
+        // Pré-preenche nome e telefone
+        const nameInput = document.getElementById('input-name');
+        const phoneInput = document.getElementById('input-phone');
+        nameInput.value = pedidoAtivo.client_name || '';
+        nameInput.dataset.original = pedidoAtivo.client_name || '';
+        nameInput.readOnly = true;
+        phoneInput.value = pedidoAtivo.client_phone || '';
+        phoneInput.dataset.original = pedidoAtivo.client_phone || '';
+        phoneInput.readOnly = true;
+
+        // Adiciona botões de editar nos campos
+        addEditButton('input-name');
+        addEditButton('input-phone');
+
+        const itensAntigos = Array.isArray(pedidoAtivo.itens) ? pedidoAtivo.itens : [];
+        const totalAntigo = parseFloat(pedidoAtivo.total_price || 0);
+        const totalFinal = totalAntigo + newTotal;
+
+        document.getElementById('checkout-summary').innerHTML = `
+          <div class="order-summary-title">Itens anteriores</div>
+          ${itensAntigos.map(it => `
+            <div class="order-summary-item" style="opacity:0.6;">
+              <span>${it.qty || it.quantidade || 1}× ${escHtml(it.name || it.nome)}</span>
+              <span>${formatCurrency((it.qty || it.quantidade || 1) * parseFloat(it.price || it.preco || 0))}</span>
+            </div>`).join('')}
+          <div class="order-summary-title" style="margin-top:12px;">Itens novos</div>
+          ${newItems.map(({item,qty}) => `
+            <div class="order-summary-item">
+              <span>${qty}× ${escHtml(item.nome)}</span>
+              <span>${formatCurrency(qty * parseFloat(item.preco||0))}</span>
+            </div>`).join('')}
+          <div class="order-summary-total">
+            <span>Total</span><span>${formatCurrency(totalFinal)}</span>
+          </div>`;
+      } else {
+        document.getElementById('checkout-summary').innerHTML = `
+          <div class="order-summary-title">Resumo do pedido</div>
+          ${newItems.map(({item,qty}) => `
+            <div class="order-summary-item">
+              <span>${qty}× ${escHtml(item.nome)}</span>
+              <span>${formatCurrency(qty * parseFloat(item.preco||0))}</span>
+            </div>`).join('')}
+          <div class="order-summary-total">
+            <span>Total</span><span>${formatCurrency(newTotal)}</span>
+          </div>`;
+      }
+
       document.getElementById('checkout-backdrop').classList.add('open');
       document.getElementById('checkout-modal').classList.add('open');
     }
-    function closeCheckout() {
-      document.getElementById('checkout-backdrop').classList.remove('open');
-      document.getElementById('checkout-modal').classList.remove('open');
+
+    function addEditButton(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const existing = document.getElementById(`edit-btn-${inputId}`);
+      if (existing) existing.remove();
+      const wrap = input.parentElement;
+      wrap.style.position = 'relative';
+      const btn = document.createElement('button');
+      btn.id = `edit-btn-${inputId}`;
+      btn.textContent = '✏️';
+      btn.style.cssText = `
+        position:absolute; right:12px; top:50%; transform:translateY(-50%);
+        background:transparent; border:none; cursor:pointer; font-size:15px;
+        padding:4px;
+      `;
+      btn.onclick = () => {
+        input.readOnly = false;
+        input.focus();
+        btn.remove();
+      };
+      wrap.appendChild(btn);
     }
 
-    async function submitOrder() {
+async function submitOrder() {
       const name  = document.getElementById('input-name').value.trim();
       const phone = document.getElementById('input-phone').value.trim();
       const notes = document.getElementById('input-notes').value.trim();
       if (!name) { alert('Por favor, informe seu nome.'); document.getElementById('input-name').focus(); return; }
-
-      const items = Object.values(cart);
-      const total = items.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
-      const itens = items.map(({item,qty}) => ({
+      const cartItems = Object.values(cart);
+      const itensNovos = cartItems.map(({item,qty}) => ({
         name: item.nome, qty, quantidade: qty,
         price: parseFloat(item.preco||0), preco: parseFloat(item.preco||0)
       }));
-
+      const totalNovo = cartItems.reduce((s,c) => s + c.qty * parseFloat(c.item.preco||0), 0);
       const btn = document.getElementById('confirm-btn');
       btn.disabled = true;
       btn.textContent = 'Enviando...';
-
       try {
-        const resp = await fetch(`${API_BASE}/api/v1/pedidos`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            restaurant_id: restaurantId,
-            client_name: name,
-            client_phone: phone || null,
-            itens, total_price: total,
-            service_type: 'local',
-            origin: 'autoatendimento',
-            table_number: mesaNum || null,
-            notes: notes || null
-          })
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Erro ao criar pedido');
-        closeCheckout();
-        showSuccess(data.order?.order_number);
+        let resp, data;
+        if (modoAdicao && pedidoAtivo) {
+          resp = await fetch(${API_BASE}/api/v1/pedidos/${pedidoAtivo.id}/adicionar-itens, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              itens_novos: itensNovos,
+              total_adicional: totalNovo,
+              client_name: name,
+              client_phone: phone || null,
+              notes: notes || null
+            })
+          });
+          data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Erro ao adicionar itens');
+          closeCheckout();
+          showSuccess(data.order?.order_number);
+        } else {
+          resp = await fetch(${API_BASE}/api/v1/pedidos, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              restaurant_id: restaurantId,
+              client_name: name,
+              client_phone: phone || null,
+              itens: itensNovos,
+              total_price: totalNovo,
+              service_type: 'local',
+              origin: 'autoatendimento',
+              table_number: mesaNum || null,
+              notes: notes || null
+            })
+          });
+          data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Erro ao criar pedido');
+          closeCheckout();
+          showSuccess(data.order?.order_number);
+        }
       } catch(e) {
         alert('Erro ao enviar pedido.\n' + e.message);
         btn.disabled = false;
@@ -1146,6 +1224,8 @@ ordemCategorias.forEach(cat => {
     function resetAll() {
       cart = {};
       tutorialDone = false;
+      pedidoAtivo = null;
+      modoAdicao = false; 
       localStorage.setItem(SESSION_KEY, Date.now().toString()); // reinicia os 2h
       document.getElementById('success-screen').classList.remove('open');
       document.getElementById('input-name').value = '';
@@ -1560,6 +1640,103 @@ function carrosselAnterior() {
   }
 }
 
+async function checkPedidoAtivo() {
+  if (!mesaNum || !restaurantId) return;
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/pedidos-mesa?restaurant_id=${restaurantId}&mesa=${mesaNum}`);
+    const data = await resp.json();
+    if (data.pedido) {
+      pedidoAtivo = data.pedido;
+      openDrawerMesaOcupada(pedidoAtivo);
+    }
+  } catch(e) {
+    console.error('Erro ao verificar pedido ativo:', e);
+  }
+}
+
+function openDrawerMesaOcupada(pedido) {
+  const existing = document.getElementById('drawer-mesa-ocupada');
+  if (existing) existing.remove();
+
+  const total = parseFloat(pedido.total_price || 0);
+  const itens = Array.isArray(pedido.itens) ? pedido.itens : [];
+
+  const overlay = document.createElement('div');
+  overlay.id = 'drawer-mesa-ocupada';
+  overlay.style.cssText = `
+    position:fixed; inset:0; background:rgba(26,24,20,0.7);
+    display:flex; align-items:center; justify-content:center;
+    z-index:900; backdrop-filter:blur(4px); padding:24px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background:var(--white); border-radius:24px;
+      width:100%; max-width:420px;
+      padding:28px 24px 24px;
+      animation:slideUp 0.3s ease;
+    ">
+      <div style="text-align:center; margin-bottom:20px;">
+        <div style="font-size:36px; margin-bottom:10px;">🍽️</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:6px;">
+          Mesa ${mesaNum} ocupada
+        </div>
+        <div style="font-size:14px; color:var(--muted); font-weight:400;">
+          Já existe um pedido de <strong style="color:var(--ink);">${escHtml(pedido.client_name)}</strong> nesta mesa
+        </div>
+      </div>
+
+      <div style="
+        background:var(--cream); border:1px solid var(--border);
+        border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:20px;
+      ">
+        <div style="font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">
+          Pedido atual
+        </div>
+        ${itens.map(it => `
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink2); padding:3px 0;">
+            <span>${escHtml(it.qty || it.quantidade || 1)}× ${escHtml(it.name || it.nome)}</span>
+            <span style="font-weight:600;">${formatCurrency((it.qty || it.quantidade || 1) * parseFloat(it.price || it.preco || 0))}</span>
+          </div>
+        `).join('')}
+        <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--border-dk); font-size:14px; font-weight:700;">
+          <span>Total atual</span>
+          <span style="font-family:'Cormorant Garamond',serif; font-size:17px;">${formatCurrency(total)}</span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="confirmarAdicao()" style="
+          width:100%; padding:15px; border-radius:var(--radius-sm);
+          border:none; background:var(--ink); color:#fff;
+          font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
+          cursor:pointer;">
+          + Adicionar itens ao pedido
+        </button>
+        <button onclick="fecharDrawerMesaOcupada()" style="
+          width:100%; padding:15px; border-radius:var(--radius-sm);
+          border:1.5px solid var(--border-dk); background:transparent;
+          font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
+          color:var(--muted); cursor:pointer;">
+          Fazer novo pedido
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+function confirmarAdicao() {
+  modoAdicao = true;
+  fecharDrawerMesaOcupada();
+}
+
+function fecharDrawerMesaOcupada() {
+  const el = document.getElementById('drawer-mesa-ocupada');
+  if (el) el.remove();
+}
+    
 async function loadCardapio() {
   try {
     const resp = await fetch(`${API_BASE}/api/v1/cardapio/${restaurantId}`);
