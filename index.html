@@ -1704,13 +1704,13 @@ function openDrawerMesaOcupada(pedido) {
           cursor:pointer;">
           + Adicionar itens ao pedido
         </button>
-        <button onclick="fecharDrawerMesaOcupada()" style="
-          width:100%; padding:15px; border-radius:var(--radius-sm);
-          border:1.5px solid var(--border-dk); background:transparent;
-          font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
-          color:var(--muted); cursor:pointer;">
-          Fazer novo pedido
-        </button>
+        <button onclick="fecharDrawerMesaOcupada(); document.getElementById('drawer-mesa-ocupada')?.remove();" style="
+  width:100%; padding:15px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--border-dk); background:transparent;
+  font-family:'Outfit',sans-serif; font-size:15px; font-weight:600;
+  color:var(--muted); cursor:pointer;">
+  Fechar
+</button>
       </div>
     </div>
   `;
