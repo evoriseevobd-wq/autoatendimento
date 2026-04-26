@@ -823,6 +823,7 @@ function showSpotlightCategoria() {
 
     await loadRestaurant();
     await loadCardapio();
+    await loadCategorias();
     await checkPedidoAtivo();
 
   } catch (e) {
@@ -893,77 +894,90 @@ async function loadRestaurant() {
     // RENDER
     // ═══════════════════════════════
     function renderCardapio() {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('cardapio-content').style.display = 'block';
-      document.getElementById('search-inline').style.display = 'block';
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('cardapio-content').style.display = 'block';
+  document.getElementById('search-inline').style.display = 'block';
 
-      const categorias = {};
-const ordemCategorias = [];
+  const categorias = {};
+  const ordemCategorias = [];
 
-// Respeita a ordem exata que o backend mandou (já ordenada pelo admin)
-cardapioItems.forEach(item => {
-  const cat = item.categoria || 'Geral';
-  if (!categorias[cat]) {
-    categorias[cat] = [];
-    ordemCategorias.push(cat);
-  }
-  categorias[cat].push(item);
-});
-
-// Ordena os itens dentro de cada categoria pelo campo ordem
-ordemCategorias.forEach(cat => {
-  categorias[cat].sort((a, b) => (a.ordem||0) - (b.ordem||0));
-});
-
-      const catNav = document.getElementById('cat-nav');
-      catNav.innerHTML = '';
-      Object.keys(categorias).forEach((cat, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'cat-btn' + (i === 0 ? ' active' : '');
-        btn.textContent = cat;
-        btn.onclick = () => {
-          document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          document.getElementById(`cat-${slugify(cat)}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
-        catNav.appendChild(btn);
-      });
-
-      // Esconde a nav de categorias
-      document.getElementById('cat-nav-wrap').style.display = 'none';
-
-      const content = document.getElementById('cardapio-content');
-      content.innerHTML = '';
-
-     ordemCategorias.forEach((cat, idx) => {
-  const items = categorias[cat];
-        const section = document.createElement('div');
-        section.className = 'category-section'; // fechado por padrão
-        section.id = `cat-${slugify(cat)}`;
-        section.style.animationDelay = `${idx * 0.07}s`;
-
-        const title = document.createElement('div');
-        title.className = 'category-title';
-        title.innerHTML = `
-          <span class="category-title-text">${cat}</span>
-          <span class="category-arrow">›</span>
-        `;
-
-        title.addEventListener('click', () => {
-          dismissSpotlight();
-          const isOpen = section.classList.toggle('open');
-          title.querySelector('.category-arrow').textContent = isOpen ? '⌄' : '›';
-        });
-
-        const grid = document.createElement('div');
-        grid.className = 'items-grid';
-        items.forEach(item => grid.appendChild(buildItemCard(item)));
-
-        section.appendChild(title);
-        section.appendChild(grid);
-        content.appendChild(section);
-      });
+  cardapioItems.forEach(item => {
+    const cat = item.categoria || 'Geral';
+    if (!categorias[cat]) {
+      categorias[cat] = [];
+      ordemCategorias.push(cat);
     }
+    categorias[cat].push(item);
+  });
+
+  ordemCategorias.forEach(cat => {
+    categorias[cat].sort((a, b) => (a.ordem||0) - (b.ordem||0));
+  });
+
+  document.getElementById('cat-nav-wrap').style.display = 'none';
+
+  const content = document.getElementById('cardapio-content');
+  content.innerHTML = '';
+
+  ordemCategorias.forEach((cat, idx) => {
+    const items = categorias[cat];
+    const isAlt = idx % 2 !== 0;
+
+    // Busca foto da categoria na ordem salva
+    const catObj = typeof restaurantCategorias !== 'undefined'
+      ? restaurantCategorias.find(c => (c.nome || c) === cat)
+      : null;
+    const fotoUrl = catObj?.foto_url || null;
+
+    const section = document.createElement('div');
+    section.style.animationDelay = `${idx * 0.07}s`;
+
+    section.innerHTML = `
+      <div class="cat-row-float ${isAlt ? 'alt' : ''}" onclick="toggleCatFloat(this)" style="
+        display:flex;
+        align-items:flex-end;
+        flex-direction:${isAlt ? 'row-reverse' : 'row'};
+        padding:20px 0;
+        cursor:pointer;
+      ">
+        <div style="width:110px;height:110px;flex-shrink:0;position:relative;">
+          ${fotoUrl
+            ? `<img src="${fotoUrl}" style="width:110px;height:110px;object-fit:cover;border-radius:50%;display:block;" />`
+            : `<div style="width:110px;height:110px;border-radius:50%;background:rgba(91,28,28,0.4);display:flex;align-items:center;justify-content:center;font-size:32px;">🍽️</div>`
+          }
+          ${fotoUrl ? `<div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,transparent 25%,rgba(12,10,9,0.4) 55%,rgba(12,10,9,0.88) 78%,var(--cream) 100%);"></div>` : ''}
+        </div>
+        <div style="
+          flex:1;
+          padding:0 24px;
+          padding-bottom:4px;
+          display:flex;
+          flex-direction:column;
+          gap:4px;
+          ${isAlt ? 'align-items:flex-end;text-align:right;' : ''}
+        ">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;font-style:italic;letter-spacing:-0.02em;color:var(--ink);">${cat}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:1px;">${items.length} ${items.length === 1 ? 'item' : 'itens'}</div>
+          <div class="cat-float-arrow" style="font-size:13px;color:rgba(252,228,228,0.3);transition:transform 0.25s;margin-top:2px;">›</div>
+        </div>
+      </div>
+      <div class="cat-float-items" style="display:none;flex-direction:column;gap:8px;padding:0 0 24px;">
+        ${items.map(item => buildItemCard(item).outerHTML).join('')}
+      </div>
+    `;
+
+    content.appendChild(section);
+  });
+}
+
+function toggleCatFloat(row) {
+  const items = row.nextElementSibling;
+  const arrow = row.querySelector('.cat-float-arrow');
+  const isOpen = items.style.display === 'flex';
+  items.style.display = isOpen ? 'none' : 'flex';
+  items.style.flexDirection = 'column';
+  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
 
     function buildItemCard(item) {
       const card = document.createElement('div');
@@ -1726,6 +1740,21 @@ function confirmarAdicao() {
 function fecharDrawerMesaOcupada() {
   const el = document.getElementById('drawer-mesa-ocupada');
   if (el) el.remove();
+}
+    
+let restaurantCategorias = [];
+
+async function loadCategorias() {
+  if (!restaurantId) return;
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/restaurante/${restaurantId}/config`);
+    const config = await resp.json();
+    if (Array.isArray(config?.categorias_ordem)) {
+      restaurantCategorias = config.categorias_ordem;
+    }
+  } catch(e) {
+    restaurantCategorias = [];
+  }
 }
     
 async function loadCardapio() {
