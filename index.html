@@ -822,9 +822,9 @@ function showSpotlightCategoria() {
     restaurantId = data.restaurant_id;
 
     await loadRestaurant();
-    await loadCardapio();
-    await loadCategorias();
-    await checkPedidoAtivo();
+await loadCategorias();
+await loadCardapio();
+await checkPedidoAtivo();
 
   } catch (e) {
     console.error('❌ Erro no init:', e);
