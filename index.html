@@ -899,8 +899,28 @@ async function loadRestaurant() {
   document.getElementById('search-inline').style.display = 'block';
 
   const categorias = {};
-  const ordemCategorias = [];
+const ordemCategorias = [];
 
+// Respeita a ordem salva no restaurantCategorias
+if (restaurantCategorias.length > 0) {
+  restaurantCategorias.forEach(c => {
+    const nome = c.nome || c;
+    const itens = cardapioItems.filter(i => i.categoria === nome);
+    if (itens.length > 0) {
+      categorias[nome] = itens;
+      ordemCategorias.push(nome);
+    }
+  });
+  // Adiciona categorias que não estão na ordem salva
+  cardapioItems.forEach(item => {
+    const cat = item.categoria || 'Geral';
+    if (!categorias[cat]) {
+      categorias[cat] = [];
+      ordemCategorias.push(cat);
+    }
+    if (!categorias[cat].includes(item)) categorias[cat].push(item);
+  });
+} else {
   cardapioItems.forEach(item => {
     const cat = item.categoria || 'Geral';
     if (!categorias[cat]) {
@@ -909,6 +929,7 @@ async function loadRestaurant() {
     }
     categorias[cat].push(item);
   });
+}
 
   ordemCategorias.forEach(cat => {
     categorias[cat].sort((a, b) => (a.ordem||0) - (b.ordem||0));
