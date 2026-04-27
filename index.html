@@ -1644,33 +1644,36 @@ refreshItemCard(itemId);
 }
     
     function filtrarCardapio(query) {
-  const q = query.trim().toLowerCase();
-  const sections = document.querySelectorAll('.category-section');
+  const q = query.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const sections = document.querySelectorAll('.cat-row-float');
 
   if (!q) {
     sections.forEach(s => {
       s.style.display = '';
-      s.querySelectorAll('.item-card').forEach(c => c.style.display = '');
+      const items = s.nextElementSibling;
+      if (items) items.querySelectorAll('.item-card').forEach(c => c.style.display = '');
     });
     return;
   }
 
   sections.forEach(section => {
-    let visíveis = 0;
-    section.querySelectorAll('.item-card').forEach(card => {
-      const nome = card.querySelector('.item-name')?.textContent.toLowerCase() || '';
-      const desc = card.querySelector('.item-desc')?.textContent.toLowerCase() || '';
+    const items = section.nextElementSibling;
+    if (!items) return;
+    let visiveis = 0;
+    items.querySelectorAll('.item-card').forEach(card => {
+      const nome = card.querySelector('.item-name')?.textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '') || '';
+      const desc = card.querySelector('.item-desc')?.textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '') || '';
       if (nome.includes(q) || desc.includes(q)) {
         card.style.display = '';
-        visíveis++;
+        visiveis++;
       } else {
         card.style.display = 'none';
       }
     });
-    section.style.display = visíveis === 0 ? 'none' : '';
-    // Abre a categoria automaticamente se tem resultado
-    if (visíveis > 0 && !section.classList.contains('open')) {
-      section.classList.add('open');
+    section.style.display = visiveis === 0 ? 'none' : '';
+    if (visiveis > 0) {
+      items.style.display = 'flex';
+      items.style.flexDirection = 'column';
     }
   });
 }
