@@ -229,6 +229,7 @@ html { scroll-behavior: smooth; }
   border-bottom: 1px solid var(--border);
   padding: 12px 0;
   background: transparent;
+  width: 100%;
 }
     .item-card:hover { border-color: var(--border-dk); box-shadow: var(--shadow-lg); transform: translateY(-1px); }
     .item-card.inactive { opacity: 0.4; pointer-events: none; }
@@ -1046,14 +1047,35 @@ function toggleCatFloat(row) {
   refreshItemCard(itemId);
 }
 
+function refreshItemCard(itemId) {
+  const card = document.getElementById(`item-card-${itemId}`);
+  if (!card) return;
+  const inCart = cart[itemId];
+  const footer = card.querySelector('.item-footer');
+  if (!footer) return;
+  const btnArea = footer.querySelector('.add-btn, .item-counter');
+  if (!btnArea) return;
+
+  if (inCart && inCart.qty > 0) {
+    btnArea.outerHTML = `
+      <div class="item-counter">
+        <button class="counter-btn" onclick="changeQty('${itemId}',-1,event)">−</button>
+        <span class="counter-qty">${inCart.qty}</span>
+        <button class="counter-btn" onclick="changeQty('${itemId}',1,event)">+</button>
+      </div>`;
+  } else {
+    btnArea.outerHTML = `<button class="add-btn" onclick="event.stopPropagation(); addToCart('${itemId}',event)">+</button>`;
+  }
+}
+    
     function changeQty(itemId, delta, e) {
-      if (e) e.stopPropagation();
-      if (!cart[itemId]) return;
-      cart[itemId].qty += delta;
-      if (cart[itemId].qty <= 0) delete cart[itemId];
-      refreshItemCard(itemId);
-      updateCartUI();
-    }
+  if (e) e.stopPropagation();
+  if (!cart[itemId]) return;
+  cart[itemId].qty += delta;
+  if (cart[itemId].qty <= 0) delete cart[itemId];
+  refreshItemCard(itemId);
+  updateCartUI();
+}
 
     function updateCartUI() {
       const items      = Object.values(cart);
