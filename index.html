@@ -1062,9 +1062,12 @@ function refreshItemCard(itemId) {
   if (!btnArea) return;
 
   if (inCart && inCart.qty > 0) {
+    const leftBtn = inCart.qty === 1
+      ? `<button class="counter-btn" onclick="changeQty('${itemId}',-1,event)" style="font-size:14px;">🗑️</button>`
+      : `<button class="counter-btn" onclick="changeQty('${itemId}',-1,event)">−</button>`;
     btnArea.outerHTML = `
       <div class="item-counter">
-        <button class="counter-btn" onclick="changeQty('${itemId}',-1,event)">−</button>
+        ${leftBtn}
         <span class="counter-qty">${inCart.qty}</span>
         <button class="counter-btn" onclick="changeQty('${itemId}',1,event)">+</button>
       </div>`;
