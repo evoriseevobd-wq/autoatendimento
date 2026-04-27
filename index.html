@@ -981,11 +981,16 @@ section.innerHTML = `
         </div>
       </div>
       <div class="cat-float-items" style="display:none;flex-direction:column;gap:8px;padding:0 0 24px;">
-        ${items.map(item => buildItemCard(item).outerHTML).join('')}
-      </div>
+</div>
     `;
 
     content.appendChild(section);
+
+const itemsContainer = section.querySelector('.cat-float-items');
+items.forEach(item => {
+  const card = buildItemCard(item);
+  itemsContainer.appendChild(card);
+   }); 
   });
 }
 
