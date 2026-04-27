@@ -1618,17 +1618,17 @@ const nomeCompleto = op.texto_livre
       precoFinal = Math.max(...precos);
     }
 
-    cart[`${itemId}_${idx}`] = {
-      item: { ...item, nome: nomeCompleto, preco: precoFinal },
-      qty: 1,
-      itemId
-    };
-  } else {
-    cart[itemId] = { item, qty: 1 };
-  }
-
-  document.getElementById('item-detail-modal')?.remove();
-  updateCartUI();
+cart[`${itemId}_${idx}`] = {
+  item: { ...item, nome: nomeCompleto, preco: precoFinal },
+  qty: 1,
+  itemId
+};
+} else {
+  cart[itemId] = { item, qty: 1 };
+}
+document.getElementById('item-detail-modal')?.remove();
+updateCartUI();
+refreshItemCard(itemId);
 }
     
     function filtrarCardapio(query) {
