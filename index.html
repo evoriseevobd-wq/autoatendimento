@@ -222,17 +222,14 @@ html { scroll-behavior: smooth; }
 
     /* ── ITEM CARD ── */
     .item-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      margin-bottom: 2px;
-    }
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  background: transparent;
+}
     .item-card:hover { border-color: var(--border-dk); box-shadow: var(--shadow-lg); transform: translateY(-1px); }
     .item-card.inactive { opacity: 0.4; pointer-events: none; }
     .item-img-wrap { width: 90px; height: 90px; flex-shrink: 0; overflow: hidden; }
