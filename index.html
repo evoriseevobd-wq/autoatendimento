@@ -1024,7 +1024,7 @@ function toggleCatFloat(row) {
                       <span class="counter-qty">${inCart.qty}</span>
                       <button class="counter-btn" onclick="changeQty('${item.id}',1,event)">+</button>
                      </div>`
-                  : `<button class="add-btn" onclick="addToCart('${item.id}',event)">+</button>`}
+                  : `<button class="add-btn" onclick="event.stopPropagation(); addToCart('${item.id}',event)">+</button>`}
           </div>
         </div>`;
       return card;
@@ -1034,12 +1034,17 @@ function toggleCatFloat(row) {
     // CART
     // ═══════════════════════════════
     function addToCart(itemId, e) {
-      if (e) e.stopPropagation();
-      const item = cardapioItems.find(i => i.id === itemId);
-      if (!item) return;
-      cart[itemId] = { item, qty: 1 };
-      updateCartUI();
-    }
+  if (e) e.stopPropagation();
+  const item = cardapioItems.find(i => i.id === itemId);
+  if (!item) return;
+  if (cart[itemId]) {
+    cart[itemId].qty++;
+  } else {
+    cart[itemId] = { item, qty: 1 };
+  }
+  updateCartUI();
+  refreshItemCard(itemId);
+}
 
     function changeQty(itemId, delta, e) {
       if (e) e.stopPropagation();
