@@ -932,12 +932,14 @@ const section = document.createElement('div');
 section.style.animationDelay = `${idx * 0.07}s`;
 section.innerHTML = `
   <div class="cat-row-float ${isAlt ? 'alt' : ''}" onclick="toggleCatFloat(this)" style="
-    display:flex;
-    align-items:flex-end;
-    flex-direction:${isAlt ? 'row-reverse' : 'row'};
-    padding:10px 0;
-    cursor:pointer;
-  ">
+  display:flex;
+  align-items:flex-end;
+  flex-direction:${isAlt ? 'row-reverse' : 'row'};
+  padding:10px 0;
+  cursor:pointer;
+  margin-left:-16px;
+  margin-right:-16px;
+">
     <div style="width:140px;height:140px;flex-shrink:0;position:relative;border-radius:50%;overflow:hidden;">
       ${fotoUrl
        ? `<img src="${fotoUrl}" style="width:140px;height:140px;object-fit:cover;display:block;-webkit-mask-image:radial-gradient(circle,black 35%,transparent 70%);mask-image:radial-gradient(circle,black 35%,transparent 70%);" />`
