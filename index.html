@@ -1000,6 +1000,7 @@ function toggleCatFloat(row) {
   const isOpen = items.style.display === 'flex';
   items.style.display = isOpen ? 'none' : 'flex';
   items.style.flexDirection = 'column';
+  items.dataset.manualOpen = isOpen ? '' : 'true';
   if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
@@ -1651,7 +1652,11 @@ refreshItemCard(itemId);
     sections.forEach(s => {
       s.style.display = '';
       const items = s.nextElementSibling;
-      if (items) items.querySelectorAll('.item-card').forEach(c => c.style.display = '');
+      if (!items) return;
+      items.querySelectorAll('.item-card').forEach(c => c.style.display = '');
+      if (!items.dataset.manualOpen) {
+        items.style.display = 'none';
+      }
     });
     return;
   }
