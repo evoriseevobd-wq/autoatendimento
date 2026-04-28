@@ -1643,7 +1643,7 @@ updateCartUI();
 refreshItemCard(itemId);
 }
     
-    function filtrarCardapio(query) {
+   function filtrarCardapio(query) {
   const q = query.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const sections = document.querySelectorAll('.cat-row-float');
 
@@ -1677,7 +1677,7 @@ refreshItemCard(itemId);
     }
   });
 }
-
+    
 function irParaFoto(index, total) {
   window._carrosselIndex = index;
   const track = document.getElementById("carrossel-track");
