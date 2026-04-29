@@ -1651,6 +1651,7 @@ refreshItemCard(itemId);
   if (!q) {
     sections.forEach(s => {
       s.style.display = '';
+      s.style.flexDirection = '';
       const items = s.nextElementSibling;
       if (!items) return;
       items.querySelectorAll('.item-card').forEach(c => c.style.display = '');
