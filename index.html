@@ -134,6 +134,8 @@ html { scroll-behavior: smooth; }
       scrollbar-width: none;
     }
     .cat-nav::-webkit-scrollbar { display: none; }
+    .cat-row-float { flex-direction: row; }
+.cat-row-float.alt { flex-direction: row-reverse; }
     .cat-btn {
       flex-shrink: 0;
       padding: 6px 18px;
@@ -954,7 +956,6 @@ section.innerHTML = `
   <div class="cat-row-float ${isAlt ? 'alt' : ''}" onclick="toggleCatFloat(this)" style="
   display:flex;
   align-items:flex-end;
-  flex-direction:${isAlt ? 'row-reverse' : 'row'};
   padding:4px 0;
   cursor:pointer;
   margin-left:-18px;
