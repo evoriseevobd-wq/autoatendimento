@@ -768,49 +768,23 @@ function showSpotlightCategoria() {
     overlay.addEventListener('click', dismissSpotlight, { once: true });
   }, 100);
 }
-        function positionHole() {
-          const rect = firstTitle.getBoundingClientRect();
-          const pad  = 10;
-          hole.style.left   = (rect.left - pad) + 'px';
-          hole.style.top    = (rect.top  - pad) + 'px';
-          hole.style.width  = (rect.width  + pad * 2) + 'px';
-          hole.style.height = (rect.height + pad * 2) + 'px';
 
-          // Posiciona o label ABAIXO da categoria destacada
-          const labelTop = rect.bottom + pad + 24;
-          label.style.top = labelTop + 'px';
-          label.style.bottom = 'auto';
-        }
-
-        positionHole();
-        window.addEventListener('resize', positionHole, { passive: true });
-
-        overlay.classList.remove('hidden');
-        label.classList.remove('hidden');
-
-        // Qualquer toque fora fecha
-      overlay.addEventListener('click', dismissSpotlight, { once: true });
-    }, 100);
+function dismissSpotlight() {
+  document.getElementById('spotlight-overlay').classList.add('hidden');
+  document.getElementById('spotlight-label').classList.add('hidden');
+  setTimeout(() => showToast(), 300);
 }
 
-    function dismissSpotlight() {
-      document.getElementById('spotlight-overlay').classList.add('hidden');
-      document.getElementById('spotlight-label').classList.add('hidden');
-      // Toast aparece logo depois que o spotlight fecha
-      setTimeout(() => showToast(), 300);
-    }
-
-    function showToast() {
-      if (tutorialDone) return;
-      tutorialDone = true;
-      const toast = document.getElementById('toast-card');
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        toast.classList.remove('show');
-      }, 5000);
-    }
-
+function showToast() {
+  if (tutorialDone) return;
+  tutorialDone = true;
+  const toast = document.getElementById('toast-card');
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    toast.classList.remove('show');
+  }, 5000);
+}
     // ═══════════════════════════════
     // INIT
     // ═══════════════════════════════
