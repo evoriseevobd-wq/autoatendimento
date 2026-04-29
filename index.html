@@ -754,8 +754,10 @@ function showSpotlightCategoria() {
       hole.style.top = (rect.top - pad) + 'px';
       hole.style.width = (rect.width + pad * 2) + 'px';
       hole.style.height = (rect.height + pad * 2) + 'px';
-      label.style.top = (rect.bottom + pad + 24) + 'px';
-      label.style.bottom = 'auto';
+      label.style.top = (rect.bottom + pad + 8) + 'px';
+label.style.left = rect.left + (rect.width / 2) + 'px';
+label.style.transform = 'translateX(-50%)';
+label.style.bottom = 'auto';
     }
 
     positionHole();
