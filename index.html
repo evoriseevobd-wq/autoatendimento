@@ -747,13 +747,16 @@ function showSpotlightCategoria() {
     hole.style.borderRadius = '50%';
     overlay.appendChild(hole);
 
-    function positionHole() {
+   function positionHole() {
       const rect = firstImg.getBoundingClientRect();
+      const row = firstImg.closest('.cat-row-float');
+      const rowRect = row ? row.getBoundingClientRect() : rect;
       const pad = 10;
-      hole.style.left = (rect.left - pad) + 'px';
+      hole.style.left = (rowRect.left - pad) + 'px';
       hole.style.top = (rect.top - pad) + 'px';
-      hole.style.width = (rect.width + pad * 2) + 'px';
+      hole.style.width = (rowRect.width + pad * 2) + 'px';
       hole.style.height = (rect.height + pad * 2) + 'px';
+      hole.style.borderRadius = '16px';
       label.style.top = (rect.bottom + pad + 24) + 'px';
       label.style.bottom = 'auto';
     }
@@ -761,7 +764,7 @@ function showSpotlightCategoria() {
     positionHole();
     window.addEventListener('resize', positionHole, { passive: true });
 
-    label.innerHTML = `<span class="s-icon">👆</span>Toque na foto para ver os itens`;
+    label.innerHTML = `<span class="s-icon">👆</span>Toque aqui para ver os itens`;
     overlay.classList.remove('hidden');
     label.classList.remove('hidden');
 
